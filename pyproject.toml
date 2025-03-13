@@ -21,4 +21,5 @@ dependencies = [
     "faiss-cpu>=1.7.4",
     "sentence-transformers>=2.5.1",
     "aiohttp>=3.9.0",
+    "firecrawl-py>=1.13.5",
 ]

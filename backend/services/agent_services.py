@@ -14,14 +14,15 @@ def extract_sitemap_links(base_url: str) -> list:
     try:
         r = requests.get(sitemap_url)
         if r.status_code == 200:
-            soup = BeautifulSoup(r.text, 'xml')
-            return [loc.text for loc in soup.find_all('loc')]
+            soup = BeautifulSoup(r.text)
+            return [loc.text.replace("\r\n", "").strip() for loc in soup.find_all('loc')]
     except Exception as e:
         print(f"Error extracting sitemap: {e}")
     return []
 
 async def initialize_knowledge_base():
     links = extract_sitemap_links("https://mozn.sa")
+    print(links)
     loaders =[ FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape") for link in links]
     documents = [await loader.load() for loader in loaders]
     print(documents)
