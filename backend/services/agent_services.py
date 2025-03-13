@@ -21,7 +21,7 @@ def extract_sitemap_links(base_url: str) -> list:
     return []
 
 async def initialize_knowledge_base():
-    links = extract_sitemap_links(settings.TARGET_DOMAIN)
+    links = extract_sitemap_links("https://mozn.sa")
     loaders =[ FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape") for link in links]
     documents = [await loader.load() for loader in loaders]
     print(documents)

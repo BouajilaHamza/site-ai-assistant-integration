@@ -58,3 +58,22 @@
     overflow-y: auto;
     max-height: calc(100vh - 150px);
 }
+
+.error-message {
+    background-color: #fff3f3;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.message-content {
+    word-break: break-word;
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
