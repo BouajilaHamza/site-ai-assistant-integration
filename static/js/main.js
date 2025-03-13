@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             messageInput.value = '';
 
             // Send message to backend
-            const response = await fetch('/api/chat', {
+            const response = await fetch('agents/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

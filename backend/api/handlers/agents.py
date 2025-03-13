@@ -10,7 +10,7 @@ agents_router = APIRouter()
 @agents_router.post("/agent")
 async def query_agent(query: Query):
     try:
-        response = await query_knowledge_base(query.question)
+        response = await query_knowledge_base(query.message)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -26,7 +26,7 @@ async def schedule_refresh():
 async def chat_endpoint(message: Query):
     try:
         # Add your AI logic here
-        response = await query_knowledge_base(message.question)
+        response = await query_knowledge_base(message.message)
         return {"response": response, "status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

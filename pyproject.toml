@@ -23,4 +23,6 @@ dependencies = [
     "aiohttp>=3.9.0",
     "firecrawl-py>=1.13.5",
     "lxml>=5.3.1",
+    "gunicorn>=23.0.0",
+    "langchain-huggingface>=0.1.2",
 ]

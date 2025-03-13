@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 import asyncio
 
-groq_client = ChatGroq(api_key=settings.GROQ_API_KEY)
+groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
 
 # New helper function to extract links from sitemap.xml
