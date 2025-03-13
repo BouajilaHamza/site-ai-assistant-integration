@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mozn.sa AI Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='/css/styles.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="h-100 bg-light">
+    <div class="container-fluid h-100">
+        <div class="row h-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 bg-dark text-white p-3 sidebar">
+                <div class="d-flex align-items-center mb-4">
+                    <img src="{{ url_for('static', path='/images/mozn-logo.png') }}" alt="Mozn Logo" class="logo me-2">
+                    <h4 class="mb-0">Mozn Assistant</h4>
+                </div>
+                <div class="new-chat-btn mb-3">
+                    <button class="btn btn-light w-100"><i class="fas fa-plus"></i> New Chat</button>
+                </div>
+                <div class="chat-history">
+                    <!-- Chat history items will be dynamically added here -->
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="col-md-9 col-lg-10 d-flex flex-column main-chat">
+                <div class="chat-messages flex-grow-1 p-3" id="chat-container">
+                    <div class="welcome-message text-center my-5">
+                        <h1>Welcome to Mozn AI Assistant</h1>
+                        <p class="text-muted">How can I help you today?</p>
+                    </div>
+                    <!-- Chat messages will be dynamically added here -->
+                </div>
+
+                <!-- Message Input Area -->
+                <div class="message-input-container p-3 border-top">
+                    <form id="chat-form" class="message-form">
+                        <div class="input-group">
+                            <textarea 
+                                class="form-control" 
+                                placeholder="Type your message here..." 
+                                id="message-input"
+                                rows="1"
+                            ></textarea>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+</body>
+</html>
