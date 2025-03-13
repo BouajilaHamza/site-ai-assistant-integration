@@ -22,4 +22,5 @@ dependencies = [
     "sentence-transformers>=2.5.1",
     "aiohttp>=3.9.0",
     "firecrawl-py>=1.13.5",
+    "lxml>=5.3.1",
 ]
