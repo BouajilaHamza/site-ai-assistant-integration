@@ -30,9 +30,4 @@ async def home(request: Request):
 
 @app.on_event("startup")
 async def startup_event():
-    pass
-    # await initialize_knowledge_base()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    await initialize_knowledge_base()
