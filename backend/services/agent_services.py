@@ -5,6 +5,7 @@ from backend.core.config import settings
 import requests
 from bs4 import BeautifulSoup
 
+
 groq_client = ChatGroq(api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
 
@@ -22,9 +23,10 @@ def extract_sitemap_links(base_url: str) -> list:
 
 async def initialize_knowledge_base():
     links = extract_sitemap_links("https://mozn.sa")
-    print(links)
     loaders =[ FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape") for link in links]
-    documents = [await loader.load() for loader in loaders]
+    documents = []
+    for loader in loaders:
+        documents.extend(loader.load()) 
     print(documents)
     vector_store.add_documents(documents)
 
