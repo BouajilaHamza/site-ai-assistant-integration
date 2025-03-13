@@ -4,7 +4,6 @@ from .vector_store import VectorStore
 from backend.core.config import settings
 import requests
 from bs4 import BeautifulSoup
-import time
 import asyncio
 
 groq_client = ChatGroq(api_key=settings.GROQ_API_KEY)
@@ -24,9 +23,9 @@ def extract_sitemap_links(base_url: str) -> list:
 
 
 async def initialize_knowledge_base():
-    links = extract_sitemap_links("https://mozn.sa")
+    links = extract_sitemap_links(settings.BASE_URL)
     documents = []
-    for link in links[:1]:
+    for link in links:
         await asyncio.sleep(25)  # non-blocking sleep
         try:
             loader = FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape")
@@ -34,7 +33,6 @@ async def initialize_knowledge_base():
             documents.extend(docs)
         except Exception as e:
             print(f"Error loading document: {e} {link}")
-    print(documents)
     vector_store.add_documents(documents)
 
 async def query_knowledge_base(question: str) -> str:

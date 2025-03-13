@@ -20,6 +20,19 @@ async def schedule_refresh():
     await initialize_knowledge_base()
     return {"message": "Knowledge base refresh completed"}
 
+
+
+@agents_router.post("/api/chat")
+async def chat_endpoint(message: Query):
+    try:
+        # Add your AI logic here
+        response = await query_knowledge_base(message.question)
+        return {"response": response, "status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 # Set up scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(initialize_knowledge_base, 'interval', hours=24)

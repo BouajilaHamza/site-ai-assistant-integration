@@ -13,8 +13,8 @@ class VectorStore:
     def add_documents(self, documents: List[Dict[str, str]]):
         docs = [
             Document(
-                page_content=doc['content'],
-                metadata={'url': doc['url'], 'title': doc['title']}
+                page_content=doc.page_content,
+                metadata={'url': doc.metadata['url'], 'title': doc.metadata['title']}
             )
             for doc in documents
         ]
