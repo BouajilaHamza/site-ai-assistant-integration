@@ -2,6 +2,9 @@ from typing import List, Dict
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
+from langchain_community.document_loaders.sitemap import SitemapLoader
+from backend.utils.parsing import extract_sitemap_links
+from backend.core.config import settings
 
 
 
@@ -31,3 +34,25 @@ class VectorStore:
         if self.vector_store is None:
             return []
         return self.vector_store.similarity_search(query, k=k)
+
+
+
+
+
+vector_store = VectorStore()
+
+async def initialize_knowledge_base():
+    sitemap_urls = extract_sitemap_links(settings.BASE_URL)
+    docs = []
+    for url in sitemap_urls[:1]:
+        print(f"Processing sitemap: {url}")
+        loader = SitemapLoader(web_path=url,)
+        doc = loader.aload()
+        docs.extend(doc)
+    print(f"Total documents loaded: {len(docs)}")
+    docs = [Document(page_content=doc.page_content, 
+                        metadata={"url": doc.metadata["source"],
+                                    "title": doc.metadata.get("title", "")}
+                        ) 
+                        for doc in docs]
+    vector_store.add_documents(docs)

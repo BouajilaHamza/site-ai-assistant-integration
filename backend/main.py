@@ -1,15 +1,15 @@
+from backend.services.vector_store import initialize_knowledge_base
+from backend.api.router import router
+from backend.utils.lang_detect_utils import MODEL_PATH,MODEL_URL
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-from backend.services.agent_services import initialize_knowledge_base
-from backend.api.router import router
 from dotenv import load_dotenv
 import nest_asyncio
-import httpx
 import aiofiles
-from backend.utils.lang_detect_utils import MODEL_PATH,MODEL_URL
+import httpx
 
 
 load_dotenv()

@@ -3,8 +3,8 @@ from fastapi import HTTPException
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from backend.schemas.query_schemas import Query
-from backend.services.agent_services import initialize_knowledge_base, query_knowledge_base
-
+from backend.services.agent_services import query_knowledge_base
+from backend.services.vector_store import initialize_knowledge_base
 agents_router = APIRouter()
 
 

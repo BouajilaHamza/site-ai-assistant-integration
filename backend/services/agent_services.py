@@ -1,20 +1,15 @@
 from backend.utils.validation import calculate_retrieval_metrics, calculate_llm_metrics
-from backend.services.vector_store import VectorStore
 from backend.core.config import settings
 from backend.utils.lang_detect_utils import MODEL_PATH
-from langchain_community.document_loaders.sitemap import SitemapLoader
-from langchain.docstore.document import Document
+from backend.services.vector_store import vector_store
 from langchain_groq import ChatGroq
-from bs4 import BeautifulSoup
 from typing import List, Dict
-import requests
 import fasttext
 
 
 
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
 # groq_client_allam = ChatGroq(model="allam-2-7b", api_key=settings.GROQ_API_KEY)
-vector_store = VectorStore()
 
 # Removed the immediate loading of the model at the module level
 language_model = None
@@ -30,33 +25,8 @@ def load_language_model():
 
 
 
-# New helper function to extract links from sitemap.xml
-def extract_sitemap_links(base_url: str) -> list:
-    sitemap_url = base_url.rstrip("/") + "/sitemap.xml"
-    try:
-        r = requests.get(sitemap_url)
-        if r.status_code == 200:
-            soup = BeautifulSoup(r.text,features="xml")    
-            return [loc.text.replace("\r\n", "").strip() for loc in soup.find_all('loc')]
-    except Exception as e:
-        print(f"Error extracting sitemap: {e}")
-        return []
 
-async def initialize_knowledge_base():
-    sitemap_urls = extract_sitemap_links(settings.BASE_URL)
-    docs = []
-    for url in sitemap_urls[:1]:
-        print(f"Processing sitemap: {url}")
-        loader = SitemapLoader(web_path=url,)
-        doc = loader.aload()
-        docs.extend(doc)
-    print(f"Total documents loaded: {len(docs)}")
-    docs = [Document(page_content=doc.page_content, 
-                        metadata={"url": doc.metadata["source"],
-                                    "title": doc.metadata.get("title", "")}
-                        ) 
-                        for doc in docs]
-    vector_store.add_documents(docs)
+
 
 
 def detect_language(text: str) -> str:
