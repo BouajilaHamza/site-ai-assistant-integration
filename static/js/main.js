@@ -58,7 +58,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create message content
         const contentDiv = document.createElement('div');
         contentDiv.classList.add('message-content');
-        contentDiv.textContent = text;
+        if (sender === 'assistant') {
+            // Render markdown to HTML for assistant messages
+            contentDiv.innerHTML = marked.parse(text);
+        } else {
+            contentDiv.textContent = text;
+        }
         
         messageDiv.appendChild(contentDiv);
         chatContainer.appendChild(messageDiv);

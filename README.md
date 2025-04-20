@@ -49,6 +49,13 @@ This project provides an AI-powered assistant for integrating with websites. It 
 5. **Access the Application**:
    Open your browser and navigate to `http://127.0.0.1:8000`.
 
+## Validation & Experiment Tracking
+
+- The chatbot UI includes a collapsible metrics section showing retrieval and LLM evaluation metrics (Precision, Recall, F1, ROUGE, BERTScore, etc.).
+- Metrics are computed in the backend and can be optionally displayed in the UI for technical users.
+- The backend is integrated with Comet ML for experiment tracking and evaluation logging.
+- Metrics are not fetched/submitted on every chat message by default, but the infrastructure is in place for robust evaluation.
+
 ## Environment Variables
 
 - `TARGET_DOMAIN`: The target website domain for sitemap extraction.
