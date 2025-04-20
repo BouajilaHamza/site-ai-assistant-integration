@@ -27,4 +27,5 @@ dependencies = [
     "gunicorn>=23.0.0",
     "langchain-huggingface>=0.1.2",
     "bert-score>=0.3.13",
+    "fasttext>=0.9.3",
 ]

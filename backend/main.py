@@ -7,12 +7,14 @@ from pydantic import BaseModel
 from backend.services.agent_services import initialize_knowledge_base
 from backend.api.router import router
 from dotenv import load_dotenv
+import nest_asyncio
 load_dotenv()
 
 
 
-async def lifespan(app: FastAPI):
-    await initialize_knowledge_base()
+def lifespan(app: FastAPI):
+    nest_asyncio.apply()
+    initialize_knowledge_base()
     yield
 
 

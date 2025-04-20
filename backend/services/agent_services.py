@@ -3,17 +3,21 @@ from backend.services.vector_store import VectorStore
 from backend.core.config import settings
 
 
-from langchain_community.document_loaders.firecrawl import FireCrawlLoader
+from langchain_community.document_loaders.sitemap import SitemapLoader
+from langchain.docstore.document import Document
 from langchain_groq import ChatGroq
 from bs4 import BeautifulSoup
-from typing import List,Dict
+from typing import List, Dict
 import requests
-import asyncio
-
+import fasttext
 
 
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
+groq_client_allam = ChatGroq(model="allam-3.3-70b", api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
+
+# Load the FastText language detection model
+language_model = fasttext.load_model("lid.176.bin")
 
 # New helper function to extract links from sitemap.xml
 def extract_sitemap_links(base_url: str) -> list:
@@ -25,38 +29,50 @@ def extract_sitemap_links(base_url: str) -> list:
             return [loc.text.replace("\r\n", "").strip() for loc in soup.find_all('loc')]
     except Exception as e:
         print(f"Error extracting sitemap: {e}")
-    return []
+        return []
 
-async def initialize_knowledge_base():
-    links = extract_sitemap_links(settings.TARGET_DOMAIN)
-    documents = []
-    for link in links:
-        await asyncio.sleep(25)  # non-blocking sleep
-        try:
-            print(f"Loading document: {link}")
-            loader = FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape")
-            print(f"Loader initialized for: {link}")
-            docs = await asyncio.to_thread(loader.load)  # run loader.load() without blocking
-            print(f"Loaded {len(docs)} documents from: {link}")
-            documents.extend(docs)
-        except Exception as e:
-            print(f"Error loading document: {e} {link}")
-    vector_store.add_documents(documents)
+def initialize_knowledge_base():
+    sitemap_urls = extract_sitemap_links(settings.TARGET_DOMAIN)
+    docs = []
+    for url in sitemap_urls:
+        print(f"Processing sitemap: {url}")
+        loader = SitemapLoader(web_path=url,)
+        doc = loader.aload()
+        docs.extend(doc)
+    print(f"Total documents loaded: {len(docs)}")
+    docs = [Document(page_content=doc.page_content, 
+                        metadata={"url": doc.metadata["source"],
+                                    "title": doc.metadata.get("title", "")}
+                        ) 
+                        for doc in docs]
+    vector_store.add_documents(docs)
 
 
+def detect_language(text: str) -> str:
+    prediction = language_model.predict(text, k=1)  # Get the top prediction
+    lang_code = prediction[0][0].replace("__label__", "")
+    return lang_code
 
 
 async def query_knowledge_base(question: str) -> str:
     relevant_docs = vector_store.similarity_search(question)
     context = "\n".join([doc.page_content for doc in relevant_docs])
-    
-    prompt = f"""Based on the following context:
-    {context}
-    
-    Question: {question}
-    Answer:"""
-    
-    return await groq_client.apredict(prompt)
+
+    language = detect_language(question)
+    if language == "ar":
+        prompt = f"""بناءً على السياق التالي:
+        {context}
+
+        السؤال: {question}
+        الإجابة:"""
+        return await groq_client_allam.ainvoke(prompt)
+    else:
+        prompt = f"""Based on the following context:
+        {context}
+
+        Question: {question}
+        Answer:"""
+        return await groq_client.ainvoke(prompt)
 
 
 async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List[str], 
