@@ -29,3 +29,11 @@ dependencies = [
     "bert-score>=0.3.13",
     "fasttext>=0.9.3",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel>=6.29.5",
+    "jupyter>=1.1.1",
+    "pytest>=8.3.5",
+    "websockets>=15.0.1",
+]
