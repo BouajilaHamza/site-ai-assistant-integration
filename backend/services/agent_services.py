@@ -43,7 +43,7 @@ def extract_sitemap_links(base_url: str) -> list:
         return []
 
 async def initialize_knowledge_base():
-    sitemap_urls = extract_sitemap_links(settings.TARGET_DOMAIN)
+    sitemap_urls = extract_sitemap_links(settings.BASE_URL)
     docs = []
     for url in sitemap_urls[:1]:
         print(f"Processing sitemap: {url}")

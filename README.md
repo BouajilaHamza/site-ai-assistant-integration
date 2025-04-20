@@ -11,40 +11,43 @@ This project provides an AI-powered assistant for integrating with websites. It 
 ## Project Structure
 
 - `backend/`: Contains the core application logic, including API routes, services, and utilities.
+  - `api/`: Handles API routing and request handling.
+  - `core/`: Core configurations and settings.
+  - `services/`: Business logic for agents, vector stores, and more.
+  - `utils/`: Utility functions for parsing, validation, and language detection.
 - `models/`: Stores pre-trained models like `lid.176.ftz` for language detection.
 - `static/`: Static assets such as CSS, JavaScript, and images.
 - `templates/`: HTML templates for the web interface.
 
 ## Setup Instructions
 
-1. Clone the repository:
+1. **Install `uv`**:
    ```bash
-   git clone <repository-url>
-   cd site-ai-assistant-integration
+   pip install uv
    ```
 
-2. Set up a virtual environment:
+2. **Create a Virtual Environment**:
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate
+   uv venv
    ```
 
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+3. **Sync Dependencies**:
+   - For production dependencies:
+     ```bash
+     uv sync
+     ```
+   - For development dependencies (including extras):
+     ```bash
+     uv sync --all-extras
+     ```
 
-4. Download the language detection model:
-   ```bash
-   python -c "from backend.services.agent_services import download_model; import asyncio; asyncio.run(download_model())"
-   ```
-
-5. Start the application:
+4. **Run the Application**:
    ```bash
    uvicorn backend.main:app --reload
    ```
 
-6. Access the application at `http://127.0.0.1:8000`.
+5. **Access the Application**:
+   Open your browser and navigate to `http://127.0.0.1:8000`.
 
 ## Environment Variables
 
