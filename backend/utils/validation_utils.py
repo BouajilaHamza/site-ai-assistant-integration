@@ -147,9 +147,9 @@ def calculate_retrieval_metrics(retrieved_docs: List[str], ground_truth_docs: Li
     Returns:
         Dict[str, float]: Dictionary containing precision, recall, and F1-score.
     """
-    # Convert to binary relevance (1 if in ground truth, 0 otherwise)
+
     y_true = [1 if doc in ground_truth_docs else 0 for doc in retrieved_docs]
-    y_pred = [1] * len(retrieved_docs)  # All retrieved docs are considered relevant
+    y_pred = [1] * len(retrieved_docs) 
 
     precision = precision_score(y_true, y_pred, zero_division=0)
     recall = recall_score(y_true, y_pred, zero_division=0)
@@ -175,12 +175,7 @@ def calculate_llm_metrics(generated_answer: str, reference_answer: str) -> Dict[
     logger.debug(f"ROUGE scores: {rouge_scores}")
     # BERTScore
     logger.debug("Calculating BERTScore for generated answer: ")
-    ############################################################################
-    candidate_sentence = "The cat sat on the mat."
-    reference_sentence = "A cat rested on a mat."
-
-
-    scores = bert_score(candidate_sentence, reference_sentence)
+    scores = bert_score(generated_answer, reference_answer)
     return {
         "rouge1": rouge_scores['rouge1'].fmeasure,
         "rougeL": rouge_scores['rougeL'].fmeasure,
