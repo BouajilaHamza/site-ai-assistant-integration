@@ -13,7 +13,7 @@ model = BertModel.from_pretrained(MODEL_NAME, device_map="auto")
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.info)
 
 
 def get_embeddings(text):
@@ -170,18 +170,17 @@ def calculate_llm_metrics(generated_answer: str, reference_answer: str) -> Dict[
     """
     # ROUGE
     rouge = rouge_scorer.RougeScorer(['rouge1', 'rougeL'], use_stemmer=True)
-    logger.info(f"Calculating ROUGE scores for generated answer: {generated_answer}")
+    logger.debug(f"Calculating ROUGE scores for generated answer: {generated_answer}")
     rouge_scores = rouge.score(reference_answer, generated_answer)
-    logger.info(f"ROUGE scores: {rouge_scores}")
+    logger.debug(f"ROUGE scores: {rouge_scores}")
     # BERTScore
-    logger.info("Calculating BERTScore for generated answer: ")
+    logger.debug("Calculating BERTScore for generated answer: ")
     ############################################################################
     candidate_sentence = "The cat sat on the mat."
     reference_sentence = "A cat rested on a mat."
 
 
     scores = bert_score(candidate_sentence, reference_sentence)
-    print("BERTScore:", scores)
     return {
         "rouge1": rouge_scores['rouge1'].fmeasure,
         "rougeL": rouge_scores['rougeL'].fmeasure,

@@ -1,6 +1,20 @@
-from backend.utils.validation_utils import calculate_retrieval_metrics, calculate_llm_metrics
-from typing import List, Dict
+from comet_ml import start
+import time
+from backend.services.vector_store import vector_store
+from backend.utils.validation_utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score
+from typing import List, Dict, Any
+import numpy as np
+import logging
+from backend.core.config import settings
 
+logger = logging.getLogger(__name__)
+
+# Initialize Comet experiment (replace with your actual API key)
+experiment = start(
+    api_key=settings.COMET_ML_API_KEY,
+    project_name=settings.COMET_ML_PROJECT_NAME,
+    workspace=settings.COMET_ML_WORKSPACE,
+)
 
 
 async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List[str], 
@@ -17,14 +31,94 @@ async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List
     Returns:
         Dict[str, Dict[str, float]]: Dictionary containing retrieval and LLM metrics.
     """
-    print("Validating RAG system...")
+    logger.debug("Validating RAG system...")
     retrieval_metrics = calculate_retrieval_metrics(retrieved_docs, ground_truth_docs)
-    print("Retrieval metrics calculated.")
+    logger.debug("Retrieval metrics calculated.")
     llm_metrics = calculate_llm_metrics(generated_answer, reference_answer)
-    print("LLM metrics calculated.")
-    print("RAG system validation completed.")
+    logger.debug("LLM metrics calculated.")
+    logger.debug("RAG system validation completed.")
 
     return {
         "retrieval_metrics": retrieval_metrics,
         "llm_metrics": llm_metrics
+    }
+
+
+def get_embedding(text: str):
+    # Use the same embedding model as the vector store
+    return vector_store.embeddings.embed_query(text)
+
+
+def aggregate_bertscores(bertscores):
+    # Aggregate BERTScore results (mean of F1 scores)
+    if not bertscores:
+        return 0.0
+    return sum([score['f1_score'] for score in bertscores]) / len(bertscores)
+
+
+def evaluation_task(x: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluate a query using the RAG system, including retrieval, BERTScore, and retrieval metrics.
+    """
+    start_time = time.time()
+    query = x.get('query')
+    if not query:
+        logger.error('No query provided to evaluation_task')
+        return {"error": "No query provided"}
+
+    # LLM output (simulate or call your LLM application)
+    # For now, just echo the query as candidate (replace with actual LLM call)
+    llm_output = {"candidate": query}
+    candidate = llm_output.get('candidate')
+    if not candidate:
+        logger.error('No candidate in LLM output')
+        return {"error": "No candidate in LLM output"}
+
+    # Log parameters to Comet
+    experiment.log_parameter("query", query)
+    experiment.log_parameter("candidate", candidate)
+
+    # Retrieval
+    try:
+        query_embedding = get_embedding(candidate)
+        faiss_index = vector_store.vector_store.index if vector_store.vector_store else None
+        if faiss_index is None:
+            logger.error('FAISS index is not initialized')
+            return {"error": "FAISS index is not initialized"}
+        _, Index = faiss_index.search(np.asarray(query_embedding).reshape(1, -1), k=5)
+        knowledge_base = [doc.page_content for doc in vector_store.vector_store.docstore._dict.values()]
+        retrieved_texts = [knowledge_base[i] for i in Index[0] if i < len(knowledge_base)]
+    except Exception as e:
+        logger.error(f'Retrieval error: {e}')
+        return {"error": f"Retrieval error: {e}"}
+
+    # BERTScore Calculation & Aggregation
+    bertscores = []
+    for text in retrieved_texts:
+        try:
+            bscore = bert_score(candidate, text)
+            bertscores.append(bscore)
+        except Exception as e:
+            logger.warning(f'BERTScore error for text: {e}')
+    aggregated_bertscore = aggregate_bertscores(bertscores)
+
+    # Retrieval metrics (Precision@K, Recall@K)
+    # For demonstration, treat retrieved_texts as docs and candidate as ground truth
+    retrieval_metrics = calculate_retrieval_metrics(retrieved_texts, [candidate])
+
+    # Log metrics to Comet
+    experiment.log_metric("aggregated_bertscore", aggregated_bertscore)
+    experiment.log_metric("latency", time.time() - start_time)
+    for k, v in retrieval_metrics.items():
+        experiment.log_metric(f"retrieval_{k}", v)
+
+    latency = time.time() - start_time
+
+    return {
+        "query": query,
+        "retrieved_texts": retrieved_texts,
+        "candidate": candidate,
+        "aggregated_bertscore": aggregated_bertscore,
+        "retrieval_metrics": retrieval_metrics,
+        "latency": latency,
     }

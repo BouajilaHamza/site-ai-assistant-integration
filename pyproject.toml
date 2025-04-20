@@ -32,6 +32,7 @@ dependencies = [
     "aiofiles>=24.1.0",
     "numpy==1.26.2",
     "accelerate>=1.6.0",
+    "comet-ml>=3.49.8",
 ]
 
 [project.optional-dependencies]
