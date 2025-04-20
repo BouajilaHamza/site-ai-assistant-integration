@@ -1,10 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from backend.utils.parsing import refresh_cache
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+
+from backend.services.agent_services import initialize_knowledge_base, query_knowledge_base
 from backend.api.router import router
 from dotenv import load_dotenv
 load_dotenv()
 app = FastAPI()
+
+# Mount static directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 # Enable CORS
 app.add_middleware(
@@ -16,12 +24,11 @@ app.add_middleware(
 )
 app.include_router(router)
 
+# Add base template route
+@app.get("/")
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-# Startup event
 @app.on_event("startup")
 async def startup_event():
-    await refresh_cache()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    await initialize_knowledge_base()

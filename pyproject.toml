@@ -19,4 +19,11 @@ dependencies = [
     "rouge-score>=0.1.2",
     "tavily-python>=0.5.1",
     "uvicorn>=0.34.0",
+    "faiss-cpu>=1.7.4",
+    "sentence-transformers>=2.5.1",
+    "aiohttp>=3.9.0",
+    "firecrawl-py>=1.13.5",
+    "lxml>=5.3.1",
+    "gunicorn>=23.0.0",
+    "langchain-huggingface>=0.1.2",
 ]
