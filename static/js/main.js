@@ -79,6 +79,14 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.height = (this.scrollHeight) + 'px';
     });
 
+    // Allow sending message with Enter key (without Shift)
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+    });
+
     async function fetchValidationMetrics() {
         try {
             const response = await fetch(`${API_BASE_URL}/validate`, {
