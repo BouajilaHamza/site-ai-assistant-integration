@@ -1,12 +1,17 @@
-from langchain_groq import ChatGroq
 from backend.utils.validation import calculate_retrieval_metrics, calculate_llm_metrics
-from langchain_community.document_loaders.firecrawl import FireCrawlLoader
-from .vector_store import VectorStore
+from backend.services.vector_store import VectorStore
 from backend.core.config import settings
-import requests
+
+
+from langchain_community.document_loaders.firecrawl import FireCrawlLoader
+from langchain_groq import ChatGroq
 from bs4 import BeautifulSoup
-import asyncio
 from typing import List,Dict
+import requests
+import asyncio
+
+
+
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
 
@@ -28,8 +33,11 @@ async def initialize_knowledge_base():
     for link in links:
         await asyncio.sleep(25)  # non-blocking sleep
         try:
+            print(f"Loading document: {link}")
             loader = FireCrawlLoader(url=link, api_key=settings.FIRECRAWL_API_KEY, mode="scrape")
+            print(f"Loader initialized for: {link}")
             docs = await asyncio.to_thread(loader.load)  # run loader.load() without blocking
+            print(f"Loaded {len(docs)} documents from: {link}")
             documents.extend(docs)
         except Exception as e:
             print(f"Error loading document: {e} {link}")
