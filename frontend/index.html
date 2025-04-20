@@ -20,7 +20,40 @@
             <h2>Response:</h2>
             <div id="response" class="response-box"></div>
         </div>
+
+        <div class="validation-section">
+            <h2>Validation Metrics:</h2>
+            <div id="validationMetrics" class="metrics-box"></div>
+        </div>
     </div>
     <script src="script.js"></script>
+    <script>
+        async function fetchValidationMetrics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/validate`, {
+                    method: 'GET',
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const metricsDiv = document.getElementById('validationMetrics');
+                    metricsDiv.innerHTML = `
+                        <p><strong>Retrieval Metrics:</strong></p>
+                        <p>Precision: ${data.retrieval_metrics.precision}</p>
+                        <p>Recall: ${data.retrieval_metrics.recall}</p>
+                        <p>F1-Score: ${data.retrieval_metrics.f1_score}</p>
+                        <p><strong>LLM Metrics:</strong></p>
+                        <p>ROUGE-1: ${data.llm_metrics.rouge1}</p>
+                        <p>ROUGE-L: ${data.llm_metrics.rougeL}</p>
+                        <p>BERTScore: ${data.llm_metrics.bert_score}</p>
+                    `;
+                } else {
+                    console.error('Error fetching validation metrics:', data.detail);
+                }
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        }
+    </script>
 </body>
 </html>

@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.utils.parsing import refresh_cache
 from backend.api.router import router
-
+from dotenv import load_dotenv
+load_dotenv()
 app = FastAPI()
 
 # Enable CORS
