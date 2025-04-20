@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from backend.services.agent_services import validate_rag_system
+from backend.services.validation_services import validate_rag_system
 
 validation_router = APIRouter()
 
