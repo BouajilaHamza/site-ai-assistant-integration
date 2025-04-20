@@ -36,8 +36,13 @@
 
                 <!-- Validation Section -->
                 <div class="validation-section">
-                    <h2>Validation Metrics:</h2>
-                    <div id="validationMetrics" class="metrics-box"></div>
+                    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#validationMetricsCollapse" aria-expanded="false" aria-controls="validationMetricsCollapse">
+                        <h2 style="display:inline">Validation Metrics</h2>
+                        <span class="ms-2"><i class="fas fa-chevron-down"></i></span>
+                    </button>
+                    <div class="collapse" id="validationMetricsCollapse">
+                        <div id="validationMetrics" class="metrics-box"></div>
+                    </div>
                 </div>
 
                 <!-- Message Input Area -->

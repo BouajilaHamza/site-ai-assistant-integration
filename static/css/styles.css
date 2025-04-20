@@ -77,3 +77,31 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+.metrics-box {
+    font-size: 0.95rem;
+    padding: 10px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    max-width: 400px;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.validation-section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.validation-section .btn-link {
+    padding: 0;
+    font-size: 1rem;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.validation-section .btn-link:hover {
+    text-decoration: underline;
+}
