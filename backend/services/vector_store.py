@@ -3,6 +3,9 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 
+
+
+
 class VectorStore:
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(

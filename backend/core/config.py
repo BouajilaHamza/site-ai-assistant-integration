@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = config('TAVILY_API_KEY',cast=str)
     TARGET_DOMAIN: str = config('TARGET_DOMAIN',cast=str)
     FIRECRAWL_API_KEY: str = config('FIRECRAWL_API_KEY',cast=str)
+    HUGGINGFACE_API_KEY: str = config('HUGGINGFACE_API_KEY',cast=str)
 
     class Config:
         env_file = ".env"

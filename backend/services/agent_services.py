@@ -1,7 +1,7 @@
 from backend.utils.validation import calculate_retrieval_metrics, calculate_llm_metrics
 from backend.services.vector_store import VectorStore
+from huggingface_hub import hf_hub_download
 from backend.core.config import settings
-
 
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from langchain.docstore.document import Document
@@ -15,9 +15,9 @@ import fasttext
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
 groq_client_allam = ChatGroq(model="allam-3.3-70b", api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
+model_path = language_model = fasttext.load_model(hf_hub_download(repo_id="facebook/fasttext-language-identification", filename="model.bin",token = settings.HUGGINGFACE_API_KEY))
 
-# Load the FastText language detection model
-language_model = fasttext.load_model("lid.176.bin")
+
 
 # New helper function to extract links from sitemap.xml
 def extract_sitemap_links(base_url: str) -> list:
