@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Response:', data);
             if (data.status === 'success') {
                 addMessage(data.response.content, 'assistant');
+                // Fetch evaluation metrics for the query
+                await fetchEvaluateMetrics(message);
             } else {
                 throw new Error('Response was not successful');
             }
@@ -120,6 +122,52 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error:', error.message);
         }
+    }
+
+    // Fetch and display metrics from /validation/evaluate and /validation/validate endpoints
+    async function fetchEvaluateMetrics(query) {
+        try {
+            const response = await fetch('/validation/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            if (!response.ok) throw new Error('Failed to fetch evaluation metrics');
+            const data = await response.json();
+            updateMetricsSection(data, 'Evaluation');
+        } catch (error) {
+            console.error('Evaluation metrics error:', error);
+        }
+    }
+
+    async function fetchValidateMetrics(payload) {
+        try {
+            const response = await fetch('/validation/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Failed to fetch validation metrics');
+            const data = await response.json();
+            updateMetricsSection(data, 'Validation');
+        } catch (error) {
+            console.error('Validation metrics error:', error);
+        }
+    }
+
+    function updateMetricsSection(data, label) {
+        const metricsDiv = document.getElementById('validationMetrics');
+        metricsDiv.innerHTML = `
+            <p><strong>${label} - Retrieval Metrics:</strong></p>
+            <p>Precision: ${data.retrieval_metrics?.precision ?? 'N/A'}</p>
+            <p>Recall: ${data.retrieval_metrics?.recall ?? 'N/A'}</p>
+            <p>F1-Score: ${data.retrieval_metrics?.f1_score ?? 'N/A'}</p>
+            <p><strong>${label} - LLM Metrics:</strong></p>
+            <p>ROUGE-1: ${data.llm_metrics?.rouge1 ?? 'N/A'}</p>
+            <p>ROUGE-L: ${data.llm_metrics?.rougeL ?? 'N/A'}</p>
+            <p>BERTScore: ${data.llm_metrics?.bert_score ?? 'N/A'}</p>
+            ${data.latency !== undefined ? `<p>Latency: ${data.latency.toFixed(2)}s</p>` : ''}
+        `;
     }
 
     // Call the function to fetch and display validation metrics
