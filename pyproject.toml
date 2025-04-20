@@ -28,6 +28,9 @@ dependencies = [
     "langchain-huggingface>=0.1.2",
     "bert-score>=0.3.13",
     "fasttext>=0.9.3",
+    "httpx>=0.28.1",
+    "aiofiles>=24.1.0",
+    "numpy==1.26.2",
 ]
 
 [project.optional-dependencies]

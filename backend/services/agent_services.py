@@ -1,8 +1,7 @@
 from backend.utils.validation import calculate_retrieval_metrics, calculate_llm_metrics
 from backend.services.vector_store import VectorStore
-from huggingface_hub import hf_hub_download
 from backend.core.config import settings
-
+from backend.utils.lang_detect_utils import MODEL_PATH
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from langchain.docstore.document import Document
 from langchain_groq import ChatGroq
@@ -12,10 +11,22 @@ import requests
 import fasttext
 
 
+
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
-groq_client_allam = ChatGroq(model="allam-3.3-70b", api_key=settings.GROQ_API_KEY)
+# groq_client_allam = ChatGroq(model="allam-2-7b", api_key=settings.GROQ_API_KEY)
 vector_store = VectorStore()
-model_path = language_model = fasttext.load_model(hf_hub_download(repo_id="facebook/fasttext-language-identification", filename="model.bin",token = settings.HUGGINGFACE_API_KEY))
+
+# Removed the immediate loading of the model at the module level
+language_model = None
+
+def load_language_model():
+    global language_model
+    if language_model is None:
+        language_model = fasttext.load_model(str(MODEL_PATH))
+
+
+
+
 
 
 
@@ -31,10 +42,10 @@ def extract_sitemap_links(base_url: str) -> list:
         print(f"Error extracting sitemap: {e}")
         return []
 
-def initialize_knowledge_base():
+async def initialize_knowledge_base():
     sitemap_urls = extract_sitemap_links(settings.TARGET_DOMAIN)
     docs = []
-    for url in sitemap_urls:
+    for url in sitemap_urls[:1]:
         print(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url,)
         doc = loader.aload()
@@ -49,7 +60,10 @@ def initialize_knowledge_base():
 
 
 def detect_language(text: str) -> str:
+    load_language_model()
+    print(f"Detecting language for text: {text}")
     prediction = language_model.predict(text, k=1)  # Get the top prediction
+    print(prediction)
     lang_code = prediction[0][0].replace("__label__", "")
     return lang_code
 
@@ -59,13 +73,14 @@ async def query_knowledge_base(question: str) -> str:
     context = "\n".join([doc.page_content for doc in relevant_docs])
 
     language = detect_language(question)
-    if language == "ar":
+    print(language)
+    if language in ["ar","fa"]:
         prompt = f"""بناءً على السياق التالي:
         {context}
 
         السؤال: {question}
         الإجابة:"""
-        return await groq_client_allam.ainvoke(prompt)
+        return await groq_client.ainvoke(prompt)
     else:
         prompt = f"""Based on the following context:
         {context}

@@ -7,16 +7,29 @@ from backend.services.agent_services import initialize_knowledge_base
 from backend.api.router import router
 from dotenv import load_dotenv
 import nest_asyncio
+import httpx
+import aiofiles
+from backend.utils.lang_detect_utils import MODEL_PATH,MODEL_URL
+
+
 load_dotenv()
 
+async def download_model():
+    MODEL_PATH.parent.mkdir(exist_ok=True)
+    async with httpx.AsyncClient() as client:              # httpx async client :contentReference[oaicite:5]{index=5}
+        resp = await client.get(MODEL_URL)
+        resp.raise_for_status()
+        async with aiofiles.open(MODEL_PATH, "wb") as f:   # aiofiles for non‑blocking file I/O :contentReference[oaicite:6]{index=6}
+            await f.write(resp.content)
 
 
-def lifespan(app: FastAPI):
+
+async def lifespan(app: FastAPI):
     nest_asyncio.apply()
-    initialize_knowledge_base()
+    if not MODEL_PATH.exists():
+        await download_model()
+    await initialize_knowledge_base()
     yield
-
-
 
 app = FastAPI(
     title="Knowledge Base API",
