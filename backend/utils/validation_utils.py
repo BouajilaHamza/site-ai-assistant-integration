@@ -179,6 +179,7 @@ def calculate_llm_metrics(generated_answer: str, reference_answer: str) -> Dict[
     candidate_sentence = "The cat sat on the mat."
     reference_sentence = "A cat rested on a mat."
 
+
     scores = bert_score(candidate_sentence, reference_sentence)
     print("BERTScore:", scores)
     return {

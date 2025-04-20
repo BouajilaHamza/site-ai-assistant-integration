@@ -31,6 +31,7 @@ dependencies = [
     "httpx>=0.28.1",
     "aiofiles>=24.1.0",
     "numpy==1.26.2",
+    "accelerate>=1.6.0",
 ]
 
 [project.optional-dependencies]
