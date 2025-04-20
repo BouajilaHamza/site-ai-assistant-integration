@@ -34,9 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
-            
+            console.log('Response:', data);
             if (data.status === 'success') {
-                addMessage(data.response, 'assistant');
+                addMessage(data.response.content, 'assistant');
             } else {
                 throw new Error('Response was not successful');
             }
@@ -78,4 +78,37 @@ document.addEventListener('DOMContentLoaded', function() {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
     });
+
+    async function fetchValidationMetrics() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/validate`, {
+                method: 'GET',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error fetching validation metrics:', errorData.detail);
+                return;
+            }
+
+            const data = await response.json();
+            console.log(data);
+            const metricsDiv = document.getElementById('validationMetrics');
+            metricsDiv.innerHTML = `
+                <p><strong>Retrieval Metrics:</strong></p>
+                <p>Precision: ${data.retrieval_metrics?.precision || 'N/A'}</p>
+                <p>Recall: ${data.retrieval_metrics?.recall || 'N/A'}</p>
+                <p>F1-Score: ${data.retrieval_metrics?.f1_score || 'N/A'}</p>
+                <p><strong>LLM Metrics:</strong></p>
+                <p>ROUGE-1: ${data.llm_metrics?.rouge1 || 'N/A'}</p>
+                <p>ROUGE-L: ${data.llm_metrics?.rougeL || 'N/A'}</p>
+                <p>BERTScore: ${data.llm_metrics?.bert_score || 'N/A'}</p>
+            `;
+        } catch (error) {
+            console.error('Error:', error.message);
+        }
+    }
+
+    // Call the function to fetch and display validation metrics
+    fetchValidationMetrics();
 });
