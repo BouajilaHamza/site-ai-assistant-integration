@@ -1,6 +1,5 @@
 from langchain_groq import ChatGroq
 from backend.utils.validation import calculate_retrieval_metrics, calculate_llm_metrics
-from langchain_groq import ChatGroq
 from langchain_community.document_loaders.firecrawl import FireCrawlLoader
 from .vector_store import VectorStore
 from backend.core.config import settings
