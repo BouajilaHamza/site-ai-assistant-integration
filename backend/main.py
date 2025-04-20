@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from backend.services.agent_services import initialize_knowledge_base, query_knowledge_base
+from backend.services.agent_services import initialize_knowledge_base
 from backend.api.router import router
 from dotenv import load_dotenv
 load_dotenv()
@@ -28,6 +28,8 @@ app.include_router(router)
 @app.get("/")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
 
 @app.on_event("startup")
 async def startup_event():

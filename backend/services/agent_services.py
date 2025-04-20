@@ -23,7 +23,7 @@ def extract_sitemap_links(base_url: str) -> list:
     return []
 
 async def initialize_knowledge_base():
-    links = extract_sitemap_links(settings.BASE_URL)
+    links = extract_sitemap_links(settings.TARGET_DOMAIN)
     documents = []
     for link in links:
         await asyncio.sleep(25)  # non-blocking sleep
@@ -36,7 +36,20 @@ async def initialize_knowledge_base():
     vector_store.add_documents(documents)
 
 
-groq_client = ChatGroq()
+
+
+async def query_knowledge_base(question: str) -> str:
+    relevant_docs = vector_store.similarity_search(question)
+    context = "\n".join([doc.page_content for doc in relevant_docs])
+    
+    prompt = f"""Based on the following context:
+    {context}
+    
+    Question: {question}
+    Answer:"""
+    
+    return await groq_client.apredict(prompt)
+
 
 async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List[str], 
                               generated_answer: str, reference_answer: str) -> Dict[str, Dict[str, float]]:
