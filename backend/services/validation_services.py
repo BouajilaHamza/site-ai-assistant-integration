@@ -1,7 +1,7 @@
 from comet_ml import start
 import time
 from backend.services.vector_store import vector_store
-from backend.utils.validation_utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score, evaluate_retrieval_with_cross_encoder
+from backend.evaluation.utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score, evaluate_retrieval_with_cross_encoder
 from typing import List, Dict, Any
 import numpy as np
 import logging

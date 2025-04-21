@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function fetchEvaluateMetrics(query, llmResponse) {
         try {
-            const response = await fetch('/validation/evaluate', {
+            const response = await fetch('/evaluation/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query, llm_response: llmResponse })

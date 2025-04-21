@@ -23,7 +23,7 @@ async def chat_endpoint(message: Query):
     try:
         # Add your AI logic here
         response = await query_knowledge_base(message.message)
-        logger.info(f"Response: {response}")
+        logger.debug(f"Response: {response}")
         return {"response": response, "status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

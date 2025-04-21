@@ -32,11 +32,11 @@ def load_language_model():
 
 
 def detect_language(text: str) -> str:
-    logger.info("Loading language model...")
+    logger.debug("Loading language model...")
     load_language_model()
-    logger.info(f"Detecting language for text: {text}")
+    logger.debug(f"Detecting language for text: {text}")
     prediction = language_model.predict(text, k=1)  # Get the top prediction
-    logger.info(prediction)
+    logger.debug(prediction)
     lang_code = prediction[0][0].replace("__label__", "")
     return lang_code
 
@@ -46,7 +46,7 @@ async def query_knowledge_base(question: str) -> str:
     context = "\n".join([doc.page_content for doc in relevant_docs])
 
     language = detect_language(question)
-    logger.info(language)
+    logger.debug(language)
     if language in ["ar","fa"]:
         prompt = f"""بناءً على السياق التالي:
         {context}
