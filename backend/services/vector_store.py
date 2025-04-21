@@ -5,6 +5,10 @@ from langchain.docstore.document import Document
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from backend.utils.parsing_utils import extract_sitemap_links
 from backend.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 
 
@@ -45,11 +49,11 @@ async def initialize_knowledge_base():
     sitemap_urls = extract_sitemap_links(settings.BASE_URL)
     docs = []
     for url in sitemap_urls[:1]:
-        print(f"Processing sitemap: {url}")
+        logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url,)
         doc = loader.aload()
         docs.extend(doc)
-    print(f"Total documents loaded: {len(docs)}")
+    logger.debug(f"Total documents loaded: {len(docs)}")
     docs = [Document(page_content=doc.page_content, 
                         metadata={"url": doc.metadata["source"],
                                     "title": doc.metadata.get("title", "")}

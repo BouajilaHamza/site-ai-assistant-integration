@@ -5,8 +5,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from backend.schemas.query_schemas import Query
 from backend.services.agent_services import query_knowledge_base
 from backend.services.vector_store import initialize_knowledge_base
-agents_router = APIRouter()
+import logging
 
+logger = logging.getLogger(__name__)
+agents_router = APIRouter()
 
 
 @agents_router.post("/schedule")
@@ -21,7 +23,7 @@ async def chat_endpoint(message: Query):
     try:
         # Add your AI logic here
         response = await query_knowledge_base(message.message)
-        print(f"Response: {response}")
+        logger.info(f"Response: {response}")
         return {"response": response, "status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

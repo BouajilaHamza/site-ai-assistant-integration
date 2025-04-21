@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Response:', data);
             if (data.status === 'success') {
                 addMessage(data.response.content, 'assistant');
-                // Fetch evaluation metrics for the query
-                await fetchEvaluateMetrics(message);
+                // Fetch evaluation metrics for the query and LLM response
+                await fetchEvaluateMetrics(message, data.response.content);
             } else {
                 throw new Error('Response was not successful');
             }
@@ -124,13 +124,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Fetch and display metrics from /validation/evaluate and /validation/validate endpoints
-    async function fetchEvaluateMetrics(query) {
+
+    async function fetchEvaluateMetrics(query, llmResponse) {
         try {
             const response = await fetch('/validation/evaluate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query })
+                body: JSON.stringify({ query, llm_response: llmResponse })
             });
             if (!response.ok) throw new Error('Failed to fetch evaluation metrics');
             const data = await response.json();
@@ -140,20 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function fetchValidateMetrics(payload) {
-        try {
-            const response = await fetch('/validation/validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) throw new Error('Failed to fetch validation metrics');
-            const data = await response.json();
-            updateMetricsSection(data, 'Validation');
-        } catch (error) {
-            console.error('Validation metrics error:', error);
-        }
-    }
 
     function updateMetricsSection(data, label) {
         const metricsDiv = document.getElementById('validationMetrics');
@@ -162,10 +148,14 @@ document.addEventListener('DOMContentLoaded', function() {
             <p>Precision: ${data.retrieval_metrics?.precision ?? 'N/A'}</p>
             <p>Recall: ${data.retrieval_metrics?.recall ?? 'N/A'}</p>
             <p>F1-Score: ${data.retrieval_metrics?.f1_score ?? 'N/A'}</p>
+            <p><strong>${label} - Cross-Encoder Metrics:</strong></p>
+            <p>Mean Relevance: ${data.cross_encoder_metrics?.mean_relevance?.toFixed(3) ?? 'N/A'}</p>
+            <p>Max Relevance: ${data.cross_encoder_metrics?.max_relevance?.toFixed(3) ?? 'N/A'}</p>
+            <p>Min Relevance: ${data.cross_encoder_metrics?.min_relevance?.toFixed(3) ?? 'N/A'}</p>
             <p><strong>${label} - LLM Metrics:</strong></p>
             <p>ROUGE-1: ${data.llm_metrics?.rouge1 ?? 'N/A'}</p>
             <p>ROUGE-L: ${data.llm_metrics?.rougeL ?? 'N/A'}</p>
-            <p>BERTScore: ${data.llm_metrics?.bert_score ?? 'N/A'}</p>
+            <p>BERTScore: ${typeof data.llm_metrics?.bert_score === 'object' ? (data.llm_metrics.bert_score.f1_score?.toFixed(3) ?? 'N/A') : (data.llm_metrics?.bert_score ?? 'N/A')}</p>
             ${data.latency !== undefined ? `<p>Latency: ${data.latency.toFixed(2)}s</p>` : ''}
         `;
     }

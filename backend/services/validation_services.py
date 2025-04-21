@@ -1,7 +1,7 @@
 from comet_ml import start
 import time
 from backend.services.vector_store import vector_store
-from backend.utils.validation_utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score
+from backend.utils.validation_utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score, evaluate_retrieval_with_cross_encoder
 from typing import List, Dict, Any
 import numpy as np
 import logging
@@ -57,30 +57,20 @@ def aggregate_bertscores(bertscores):
 
 
 def evaluation_task(x: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Evaluate a query using the RAG system, including retrieval, BERTScore, and retrieval metrics.
-    """
     start_time = time.time()
     query = x.get('query')
-    if not query:
-        logger.error('No query provided to evaluation_task')
-        return {"error": "No query provided"}
-
-    # LLM output (simulate or call your LLM application)
-    # For now, just echo the query as candidate (replace with actual LLM call)
-    llm_output = {"candidate": query}
-    candidate = llm_output.get('candidate')
-    if not candidate:
-        logger.error('No candidate in LLM output')
-        return {"error": "No candidate in LLM output"}
+    llm_response = x.get('llm_response')
+    if not query or not llm_response:
+        logger.error('Query and LLM response are required')
+        return {"error": "Query and LLM response are required"}
 
     # Log parameters to Comet
     experiment.log_parameter("query", query)
-    experiment.log_parameter("candidate", candidate)
+    experiment.log_parameter("llm_response", llm_response)
 
     # Retrieval
     try:
-        query_embedding = get_embedding(candidate)
+        query_embedding = get_embedding(query)
         faiss_index = vector_store.vector_store.index if vector_store.vector_store else None
         if faiss_index is None:
             logger.error('FAISS index is not initialized')
@@ -92,21 +82,28 @@ def evaluation_task(x: Dict[str, Any]) -> Dict[str, Any]:
         logger.error(f'Retrieval error: {e}')
         return {"error": f"Retrieval error: {e}"}
 
-    # BERTScore Calculation & Aggregation
+    # BERTScore Calculation & Aggregation (LLM response vs retrieved docs)
     bertscores = []
     for text in retrieved_texts:
         try:
-            bscore = bert_score(candidate, text)
+            bscore = bert_score(llm_response, text)
             bertscores.append(bscore)
         except Exception as e:
             logger.warning(f'BERTScore error for text: {e}')
     aggregated_bertscore = aggregate_bertscores(bertscores)
 
-    # Retrieval metrics (Precision@K, Recall@K)
-    # For demonstration, treat retrieved_texts as docs and candidate as ground truth
-    retrieval_metrics = calculate_retrieval_metrics(retrieved_texts, [candidate])
+    # Cross-Encoder Reranking & Evaluation
+    cross_encoder_metrics = evaluate_retrieval_with_cross_encoder(query, retrieved_texts)
+    experiment.log_metric("cross_encoder_mean_relevance", cross_encoder_metrics["mean_relevance"])
+    experiment.log_metric("cross_encoder_max_relevance", cross_encoder_metrics["max_relevance"])
+    experiment.log_metric("cross_encoder_min_relevance", cross_encoder_metrics["min_relevance"])
 
-    # Log metrics to Comet
+    # LLM Metrics (LLM response vs query)
+    llm_metrics = calculate_llm_metrics(llm_response, query)
+
+    # Retrieval metrics (Precision@K, Recall@K) - not meaningful without ground truth, but kept for compatibility
+    retrieval_metrics = calculate_retrieval_metrics(retrieved_texts, [llm_response])
+
     experiment.log_metric("aggregated_bertscore", aggregated_bertscore)
     experiment.log_metric("latency", time.time() - start_time)
     for k, v in retrieval_metrics.items():
@@ -116,9 +113,11 @@ def evaluation_task(x: Dict[str, Any]) -> Dict[str, Any]:
 
     return {
         "query": query,
+        "llm_response": llm_response,
         "retrieved_texts": retrieved_texts,
-        "candidate": candidate,
         "aggregated_bertscore": aggregated_bertscore,
         "retrieval_metrics": retrieval_metrics,
+        "cross_encoder_metrics": cross_encoder_metrics,
+        "llm_metrics": llm_metrics,
         "latency": latency,
     }

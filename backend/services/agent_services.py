@@ -3,7 +3,11 @@ from backend.utils.lang_detect_utils import MODEL_PATH
 from backend.services.vector_store import vector_store
 from langchain_groq import ChatGroq
 import fasttext
+import logging 
 
+
+
+logger = logging.getLogger(__name__)
 
 
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
@@ -28,10 +32,11 @@ def load_language_model():
 
 
 def detect_language(text: str) -> str:
+    logger.info("Loading language model...")
     load_language_model()
-    print(f"Detecting language for text: {text}")
+    logger.info(f"Detecting language for text: {text}")
     prediction = language_model.predict(text, k=1)  # Get the top prediction
-    print(prediction)
+    logger.info(prediction)
     lang_code = prediction[0][0].replace("__label__", "")
     return lang_code
 
@@ -41,7 +46,7 @@ async def query_knowledge_base(question: str) -> str:
     context = "\n".join([doc.page_content for doc in relevant_docs])
 
     language = detect_language(question)
-    print(language)
+    logger.info(language)
     if language in ["ar","fa"]:
         prompt = f"""بناءً على السياق التالي:
         {context}

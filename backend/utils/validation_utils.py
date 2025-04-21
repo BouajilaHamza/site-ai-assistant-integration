@@ -3,6 +3,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 from rouge_score import rouge_scorer
 import torch
 from transformers import BertTokenizer, BertModel
+from sentence_transformers import CrossEncoder
 import logging
 
 # Load BERT model and tokenizer
@@ -11,6 +12,8 @@ MODEL_NAME = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
 model = BertModel.from_pretrained(MODEL_NAME, device_map="auto")
 
+# Initialize cross-encoder for reranking
+cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 logger = logging.getLogger(__name__)
 # logging.basicConfig(level=logging.info)
@@ -180,4 +183,37 @@ def calculate_llm_metrics(generated_answer: str, reference_answer: str) -> Dict[
         "rouge1": rouge_scores['rouge1'].fmeasure,
         "rougeL": rouge_scores['rougeL'].fmeasure,
         "bert_score": scores
+    }
+
+def rerank_with_cross_encoder(query: str, retrieved_docs: List[str]) -> list:
+    """
+    Rerank retrieved documents using a cross-encoder model.
+    Args:
+        query (str): The input query.
+        retrieved_docs (List[str]): List of retrieved document texts.
+    Returns:
+        List[Tuple[str, float]]: List of (doc, score) tuples sorted by score descending.
+    """
+    pairs = [[query, doc] for doc in retrieved_docs]
+    scores = cross_encoder.predict(pairs)
+    reranked = sorted(zip(retrieved_docs, scores), key=lambda x: x[1], reverse=True)
+    return reranked
+
+def evaluate_retrieval_with_cross_encoder(query: str, retrieved_docs: List[str]) -> dict:
+    """
+    Evaluate retrieval by scoring each doc with a cross-encoder and reporting mean/max/min relevance.
+    Args:
+        query (str): The input query.
+        retrieved_docs (List[str]): List of retrieved document texts.
+    Returns:
+        dict: mean, max, min relevance scores.
+    """
+    pairs = [[query, doc] for doc in retrieved_docs]
+    scores = cross_encoder.predict(pairs)
+    scores = list(map(float, scores))  # Ensure scores is a list of floats
+    return {
+        "mean_relevance": float(sum(scores) / len(scores)) if len(scores) > 0 else 0.0,
+        "max_relevance": float(max(scores)) if len(scores) > 0 else 0.0,
+        "min_relevance": float(min(scores)) if len(scores) > 0 else 0.0,
+        "scores": scores,
     }

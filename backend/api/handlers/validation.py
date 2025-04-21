@@ -7,6 +7,7 @@ validation_router = APIRouter()
 
 class EvaluateRequest(BaseModel):
     query: str
+    llm_response: str
 
 @validation_router.post("/validate")
 async def validate_rag(retrieved_docs: List[str], ground_truth_docs: List[str],
@@ -22,5 +23,5 @@ async def evaluate_query(request: EvaluateRequest):
     """
     Evaluate a query using the RAG system and return metrics.
     """
-    result = evaluation_task({"query": request.query})
+    result = evaluation_task({"query": request.query, "llm_response": request.llm_response})
     return result
