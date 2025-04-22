@@ -48,7 +48,7 @@ vector_store = VectorStore()
 async def initialize_knowledge_base():
     sitemap_urls = extract_sitemap_links(settings.BASE_URL)
     docs = []
-    for url in sitemap_urls[:1]:
+    for url in sitemap_urls:
         logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url,)
         doc = loader.aload()

@@ -1,4 +1,4 @@
-from backend.services.validation_services import evaluation_task
+from backend.evaluation.utils import evaluation_task
 from fastapi import APIRouter
 from pydantic import BaseModel
 

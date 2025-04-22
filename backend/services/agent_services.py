@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 groq_client = ChatGroq(model="llama-3.3-70b-versatile",api_key=settings.GROQ_API_KEY)
 # groq_client_allam = ChatGroq(model="allam-2-7b", api_key=settings.GROQ_API_KEY)
-
-# Removed the immediate loading of the model at the module level
 language_model = None
 
 def load_language_model():

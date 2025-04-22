@@ -1,20 +1,10 @@
-from comet_ml import start
-import time
-from backend.services.vector_store import vector_store
-from backend.evaluation.utils import calculate_retrieval_metrics, calculate_llm_metrics, bert_score, evaluate_retrieval_with_cross_encoder
-from typing import List, Dict, Any
-import numpy as np
+from backend.evaluation.utils import calculate_retrieval_metrics, calculate_llm_metrics
 import logging
-from backend.core.config import settings
+from typing import List,Dict
+
 
 logger = logging.getLogger(__name__)
 
-# Initialize Comet experiment (replace with your actual API key)
-experiment = start(
-    api_key=settings.COMET_ML_API_KEY,
-    project_name=settings.COMET_ML_PROJECT_NAME,
-    workspace=settings.COMET_ML_WORKSPACE,
-)
 
 
 async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List[str], 
@@ -41,83 +31,4 @@ async def validate_rag_system(retrieved_docs: List[str], ground_truth_docs: List
     return {
         "retrieval_metrics": retrieval_metrics,
         "llm_metrics": llm_metrics
-    }
-
-
-def get_embedding(text: str):
-    # Use the same embedding model as the vector store
-    return vector_store.embeddings.embed_query(text)
-
-
-def aggregate_bertscores(bertscores):
-    # Aggregate BERTScore results (mean of F1 scores)
-    if not bertscores:
-        return 0.0
-    return sum([score['f1_score'] for score in bertscores]) / len(bertscores)
-
-
-def evaluation_task(x: Dict[str, Any]) -> Dict[str, Any]:
-    start_time = time.time()
-    query = x.get('query')
-    llm_response = x.get('llm_response')
-    if not query or not llm_response:
-        logger.error('Query and LLM response are required')
-        return {"error": "Query and LLM response are required"}
-
-    # Log parameters to Comet
-    experiment.log_parameter("query", query)
-    experiment.log_parameter("llm_response", llm_response)
-
-    # Retrieval
-    try:
-        query_embedding = get_embedding(query)
-        faiss_index = vector_store.vector_store.index if vector_store.vector_store else None
-        if faiss_index is None:
-            logger.error('FAISS index is not initialized')
-            return {"error": "FAISS index is not initialized"}
-        _, Index = faiss_index.search(np.asarray(query_embedding).reshape(1, -1), k=5)
-        knowledge_base = [doc.page_content for doc in vector_store.vector_store.docstore._dict.values()]
-        retrieved_texts = [knowledge_base[i] for i in Index[0] if i < len(knowledge_base)]
-    except Exception as e:
-        logger.error(f'Retrieval error: {e}')
-        return {"error": f"Retrieval error: {e}"}
-
-    # BERTScore Calculation & Aggregation (LLM response vs retrieved docs)
-    bertscores = []
-    for text in retrieved_texts:
-        try:
-            bscore = bert_score(llm_response, text)
-            bertscores.append(bscore)
-        except Exception as e:
-            logger.warning(f'BERTScore error for text: {e}')
-    aggregated_bertscore = aggregate_bertscores(bertscores)
-
-    # Cross-Encoder Reranking & Evaluation
-    cross_encoder_metrics = evaluate_retrieval_with_cross_encoder(query, retrieved_texts)
-    experiment.log_metric("cross_encoder_mean_relevance", cross_encoder_metrics["mean_relevance"])
-    experiment.log_metric("cross_encoder_max_relevance", cross_encoder_metrics["max_relevance"])
-    experiment.log_metric("cross_encoder_min_relevance", cross_encoder_metrics["min_relevance"])
-
-    # LLM Metrics (LLM response vs query)
-    llm_metrics = calculate_llm_metrics(llm_response, query)
-
-    # Retrieval metrics (Precision@K, Recall@K) - not meaningful without ground truth, but kept for compatibility
-    retrieval_metrics = calculate_retrieval_metrics(retrieved_texts, [llm_response])
-
-    experiment.log_metric("aggregated_bertscore", aggregated_bertscore)
-    experiment.log_metric("latency", time.time() - start_time)
-    for k, v in retrieval_metrics.items():
-        experiment.log_metric(f"retrieval_{k}", v)
-
-    latency = time.time() - start_time
-
-    return {
-        "query": query,
-        "llm_response": llm_response,
-        "retrieved_texts": retrieved_texts,
-        "aggregated_bertscore": aggregated_bertscore,
-        "retrieval_metrics": retrieval_metrics,
-        "cross_encoder_metrics": cross_encoder_metrics,
-        "llm_metrics": llm_metrics,
-        "latency": latency,
     }
