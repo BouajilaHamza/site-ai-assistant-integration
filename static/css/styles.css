@@ -105,3 +105,23 @@
 .validation-section .btn-link:hover {
     text-decoration: underline;
 }
+
+.context-section {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.context-section h5 {
+    margin-bottom: 15px;
+}
+
+.context-form .form-label {
+    font-weight: bold;
+}
+
+#context-response {
+    margin-top: 15px;
+}

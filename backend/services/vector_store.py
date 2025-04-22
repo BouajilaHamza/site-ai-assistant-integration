@@ -1,5 +1,4 @@
-from typing import List, Dict
-from rich.text import Text
+from typing import List
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
@@ -60,8 +59,8 @@ def build_chunk(title: str, content: str) -> str:
     """
     return f"# {title}\n{content}"
 
-async def initialize_knowledge_base():
-    sitemap_urls = extract_sitemap_links(settings.BASE_URL)
+async def initialize_knowledge_base(base_url_or_path: str):
+    sitemap_urls = extract_sitemap_links(base_url_or_path)
     docs = []
     for url in sitemap_urls[:2]:
         logger.debug(f"Processing sitemap: {url}")
@@ -94,4 +93,5 @@ async def initialize_knowledge_base():
 
     logger.debug(f"Total chunks after semantic chunking: {len(documents)}")
     vector_store.add_documents(documents)
+    return documents
 

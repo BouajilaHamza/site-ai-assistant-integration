@@ -18,6 +18,22 @@
                     <img src="{{ url_for('static', path='/images/ai_assistant.png') }}" alt="AI Assistant Logo" class="logo">
                     <h4 class="mb-0">AI Assistant</h4>
                 </div>
+                <!-- Move Context Section here -->
+                <div class="context-section p-3 mb-3 bg-secondary rounded">
+                    <h5>Initialize Knowledge Base</h5>
+                    <form id="context-form" class="context-form">
+                        <div class="mb-3">
+                            <label for="base-url-or-path" class="form-label">Base URL or Sitemap File</label>
+                            <input type="text" class="form-control" id="base-url-or-path" placeholder="Enter base URL or leave blank to upload a file">
+                        </div>
+                        <div class="mb-3">
+                            <label for="sitemap-file" class="form-label">Upload Sitemap File (optional)</label>
+                            <input type="file" class="form-control" id="sitemap-file">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Initialize</button>
+                    </form>
+                    <div id="context-response" class="mt-3"></div>
+                </div>
                 <div class="new-chat-btn mb-3">
                     <button class="btn btn-light w-100"><i class="fas fa-plus"></i> New Chat</button>
                 </div>
@@ -36,7 +52,7 @@
                     <!-- Chat messages will be dynamically added here -->
                 </div>
 
-                <!-- Validation Section -->
+                <!-- Metrics Section -->
                 <div class="validation-section">
                     <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#validationMetricsCollapse" aria-expanded="false" aria-controls="validationMetricsCollapse">
                         <h2 style="display:inline">Validation Metrics</h2>
@@ -47,7 +63,7 @@
                     </div>
                 </div>
 
-                <!-- Message Input Area -->
+                <!-- Chatbot Section -->
                 <div class="message-input-container p-3 border-top">
                     <form id="chat-form" class="message-form">
                         <div class="input-group">
@@ -66,7 +82,6 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>
