@@ -35,18 +35,10 @@ class VectorStore:
         self.vector_store = None
         
     def add_documents(self, documents: List[Document]):
-        docs = [
-            Document(
-                page_content=doc.page_content,
-                metadata={'url': doc.metadata['url'], 'title': doc.metadata['title']}
-            )
-            for doc in documents
-        ]
-        
         if self.vector_store is None:
-            self.vector_store = FAISS.from_documents(docs, self.embeddings)
+            self.vector_store = FAISS.from_documents(documents, self.embeddings)
         else:
-            self.vector_store.add_documents(docs)
+            self.vector_store.add_documents(documents)
             
     def similarity_search(self, query: str, k: int = 3) -> List[Document]:
         if self.vector_store is None:
@@ -70,28 +62,36 @@ def build_chunk(title: str, content: str) -> str:
 
 async def initialize_knowledge_base():
     sitemap_urls = extract_sitemap_links(settings.BASE_URL)
-    print(len(sitemap_urls))
     docs = []
     for url in sitemap_urls[:2]:
         logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url, continue_on_failure=True)
         doc = loader.aload()
         docs.extend(doc)
-    print(docs[0])
     logger.debug(f"Total documents loaded: {len(docs)}")
     to_be_chunked = [doc.page_content for doc in docs]
     logger.debug(to_be_chunked[0])
     chunked_docs = chunker(docs=to_be_chunked)
 
     # Add titles to chunks
-    titled_chunks = []
+    documents = []
     for doc, chunks in zip(docs, chunked_docs):
         title = doc.metadata.get("title", "Untitled")
-        for chunk in chunks:
-            titled_chunk = Text(build_chunk(title=title, content=chunk.content))
-            titled_chunks.append(titled_chunk)
+        url = doc.metadata.get("url", "No URL")
+        language = doc.metadata.get("language", "en")
 
-    logger.debug(f"Total chunks after semantic chunking: {len(titled_chunks)}")
-    return titled_chunks
-#for chunk in chunked_docs:
-#vector_store.add_documents(chunked_docs)
+        for chunk in chunks:
+            titled_chunk = build_chunk(title=title, content=chunk.content)
+            documents.append(
+                Document(page_content=titled_chunk, 
+                        metadata={
+                            'url': url, 
+                            'title': title,
+                            'language': language
+                            })
+
+            )
+
+    logger.debug(f"Total chunks after semantic chunking: {len(documents)}")
+    vector_store.add_documents(documents)
+

@@ -1,5 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
+import logging
+
+
+
+logger = logging.getLogger(__name__)
+
+
 
 def extract_sitemap_links(base_url: str, visited=None) -> list:
     """
@@ -25,10 +32,10 @@ def extract_sitemap_links(base_url: str, visited=None) -> list:
             sitemap_urls = [base_url.rstrip("/") + suffix for suffix in ["/sitemap.xml", "/sitemaps.xml"]]
 
         for sitemap_url in sitemap_urls:
-            print(f"Trying sitemap: {sitemap_url}")
+            logger.debug(f"Trying sitemap: {sitemap_url}")
             response = requests.get(sitemap_url)
             if response.status_code == 200:
-                print(f"Found sitemap: {sitemap_url}")
+                logger.debug(f"Found sitemap: {sitemap_url}")
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, features="xml")
                 for loc in soup.find_all('loc'):
@@ -44,14 +51,14 @@ def extract_sitemap_links(base_url: str, visited=None) -> list:
                 return urls  # Return if a valid sitemap is found
 
         # If no sitemap is found, treat base_url as a regular URL
-        print(f"No sitemap found. Adding base URL: {base_url}")
+        logger.debug(f"No sitemap found. Adding base URL: {base_url}")
         if base_url not in visited:
             visited.add(base_url)
             urls.append(base_url)
 
     except requests.RequestException as e:
-        print(f"Error fetching sitemap {base_url}: {e}")
+        logger.error(f"Error fetching sitemap {base_url}: {e}")
     except Exception as e:
-        print(f"Error processing sitemap {base_url}: {e}")
+        logger.error(f"Error processing sitemap {base_url}: {e}")
 
     return urls
