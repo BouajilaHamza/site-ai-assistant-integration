@@ -162,4 +162,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Call the function to fetch and display validation metrics
     fetchValidationMetrics();
+
+    document.getElementById("context-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const baseUrlOrPath = document.getElementById("base-url-or-path").value;
+        const sitemapFile = document.getElementById("sitemap-file").files[0];
+        const formData = new FormData();
+
+        if (baseUrlOrPath) {
+            formData.append("base_url_or_path", baseUrlOrPath);
+        }
+        if (sitemapFile) {
+            formData.append("sitemap_file", sitemapFile);
+        }
+
+        const responseContainer = document.getElementById("context-response");
+        responseContainer.innerHTML = "Initializing knowledge base...";
+
+        try {
+            const response = await fetch("/context/get-context", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                responseContainer.innerHTML = `<div class="alert alert-success">Success: ${data.message}. Total documents: ${data.total_documents}</div>`;
+            } else {
+                const error = await response.json();
+                responseContainer.innerHTML = `<div class="alert alert-danger">Error: ${error.error}</div>`;
+            }
+        } catch (error) {
+            responseContainer.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+        }
+    });
 });

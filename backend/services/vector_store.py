@@ -1,21 +1,22 @@
-from typing import List, Dict
+from typing import List
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from backend.utils.parsing_utils import extract_sitemap_links
 from backend.core.config import settings
-import logging
 from semantic_chunkers import StatisticalChunker
-from sentence_transformers import SentenceTransformer
+from semantic_router.encoders import HuggingFaceEncoder
+import logging
 
 logger = logging.getLogger(__name__)
 
-encoder = {
-    "name": "all-MiniLM-L6-v2",
-    "model": SentenceTransformer("all-MiniLM-L6-v2"),
-    "tokenizer": SentenceTransformer("all-MiniLM-L6-v2").tokenizer
-}
+
+
+encoder = HuggingFaceEncoder(
+    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    max_length=512,
+)
 
 chunker = StatisticalChunker(
     encoder=encoder,
@@ -32,19 +33,11 @@ class VectorStore:
         )
         self.vector_store = None
         
-    def add_documents(self, documents: List[Dict[str, str]]):
-        docs = [
-            Document(
-                page_content=doc.page_content,
-                metadata={'url': doc.metadata['url'], 'title': doc.metadata['title']}
-            )
-            for doc in documents
-        ]
-        
+    def add_documents(self, documents: List[Document]):
         if self.vector_store is None:
-            self.vector_store = FAISS.from_documents(docs, self.embeddings)
+            self.vector_store = FAISS.from_documents(documents, self.embeddings)
         else:
-            self.vector_store.add_documents(docs)
+            self.vector_store.add_documents(documents)
             
     def similarity_search(self, query: str, k: int = 3) -> List[Document]:
         if self.vector_store is None:
@@ -53,20 +46,52 @@ class VectorStore:
 
 vector_store = VectorStore()
 
-async def initialize_knowledge_base():
-    sitemap_urls = extract_sitemap_links(settings.BASE_URL)
+def build_chunk(title: str, content: str) -> str:
+    """
+    Build a chunk with a title and content.
+
+    Args:
+        title (str): The title of the document.
+        content (str): The content of the chunk.
+
+    Returns:
+        str: The formatted chunk with the title.
+    """
+    return f"# {title}\n{content}"
+
+async def initialize_knowledge_base(base_url_or_path: str):
+    sitemap_urls = extract_sitemap_links(base_url_or_path)
     docs = []
-    for url in sitemap_urls:
+    for url in sitemap_urls[:2]:
         logger.debug(f"Processing sitemap: {url}")
-        loader = SitemapLoader(web_path=url,)
+        loader = SitemapLoader(web_path=url, continue_on_failure=True)
         doc = loader.aload()
         docs.extend(doc)
     logger.debug(f"Total documents loaded: {len(docs)}")
-    chunked_docs = chunker([doc.page_content for doc in range(len(docs))])
-    for chunk in chunked_docs:
-        chunk=  Document(
-                page_content=chunk,
-                metadata={"url": doc.metadata["source"], "title": doc.metadata.get("title", "")}
+    to_be_chunked = [doc.page_content for doc in docs]
+    logger.debug(to_be_chunked[0])
+    chunked_docs = chunker(docs=to_be_chunked)
+
+    # Add titles to chunks
+    documents = []
+    for doc, chunks in zip(docs, chunked_docs):
+        title = doc.metadata.get("title", "Untitled")
+        url = doc.metadata.get("url", "No URL")
+        language = doc.metadata.get("language", "en")
+
+        for chunk in chunks:
+            titled_chunk = build_chunk(title=title, content=chunk.content)
+            documents.append(
+                Document(page_content=titled_chunk, 
+                        metadata={
+                            'url': url, 
+                            'title': title,
+                            'language': language
+                            })
+
             )
-    logger.debug(f"Total chunks after semantic chunking: {len(chunked_docs)}")
-    vector_store.add_documents(chunked_docs)
+
+    logger.debug(f"Total chunks after semantic chunking: {len(documents)}")
+    vector_store.add_documents(documents)
+    return documents
+

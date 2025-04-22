@@ -1,4 +1,3 @@
-from backend.services.vector_store import initialize_knowledge_base
 from backend.api.router import router
 from backend.utils.lang_detect_utils import MODEL_PATH,MODEL_URL
 
@@ -6,13 +5,12 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv
 import nest_asyncio
 import aiofiles
 import httpx
 
 
-load_dotenv()
+
 
 async def download_model():
     MODEL_PATH.parent.mkdir(exist_ok=True)
@@ -28,14 +26,12 @@ async def lifespan(app: FastAPI):
     nest_asyncio.apply()
     if not MODEL_PATH.exists():
         await download_model()
-    await initialize_knowledge_base()
     yield
 
 app = FastAPI(
     title="Knowledge Base API",
     description="API for managing and querying a knowledge base.",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 # Mount static directory
