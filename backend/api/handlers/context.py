@@ -3,12 +3,15 @@ from backend.services.vector_store import initialize_knowledge_base
 from typing import Optional
 import aiofiles
 import logging
+import nest_asyncio
 
+
+nest_asyncio.apply() 
 context_router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @context_router.post("/get-context")
-async def get_context(base_url_or_path: str = Form(...), sitemap_file: Optional[UploadFile] = None):
+async def get_context(base_url_or_path: Optional[str] = Form(None), sitemap_file: Optional[UploadFile] = None):
     """
     Get context by initializing the knowledge base.
 

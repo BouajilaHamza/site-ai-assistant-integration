@@ -1,4 +1,3 @@
-from backend.services.vector_store import initialize_knowledge_base
 from backend.api.router import router
 from backend.utils.lang_detect_utils import MODEL_PATH,MODEL_URL
 
