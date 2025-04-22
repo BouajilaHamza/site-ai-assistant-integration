@@ -1,5 +1,4 @@
-from typing import List, Dict
-from rich.text import Text
+from typing import List
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
