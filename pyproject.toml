@@ -30,8 +30,9 @@ dependencies = [
     "numpy==1.26.2",
     "accelerate>=1.6.0",
     "comet-ml>=3.49.8",
-    "semantic-chunkers>=0.0.10",
     "nest-asyncio>=1.6.0",
+    "semantic-chunkers>=0.0.10",
+    "semantic-router>=0.0.68",
 ]
 
 [project.optional-dependencies]

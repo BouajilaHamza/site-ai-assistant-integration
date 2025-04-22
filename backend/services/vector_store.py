@@ -6,17 +6,20 @@ from langchain_community.document_loaders.sitemap import SitemapLoader
 from backend.utils.parsing_utils import extract_sitemap_links
 from backend.core.config import settings
 from semantic_chunkers import StatisticalChunker
-from sentence_transformers import SentenceTransformer
+from semantic_router.encoders import HuggingFaceEncoder
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 
-encoder_model = SentenceTransformer("all-MiniLM-L6-v2")
+encoder = HuggingFaceEncoder(
+    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    max_length=512,
+)
 
 chunker = StatisticalChunker(
-    encoder=encoder_model,  # Pass the model directly instead of a dictionary
+    encoder=encoder,
     min_split_tokens=100,
     max_split_tokens=500,
     plot_chunks=False,
@@ -53,20 +56,18 @@ vector_store = VectorStore()
 
 async def initialize_knowledge_base():
     sitemap_urls = extract_sitemap_links(settings.BASE_URL)
+    print(len(sitemap_urls))
     docs = []
-    for url in sitemap_urls:
+    for url in sitemap_urls[:5]:
         logger.debug(f"Processing sitemap: {url}")
-        loader = SitemapLoader(web_path=url,)
+        loader = SitemapLoader(web_path=url,continue_on_failure=True)
         doc = loader.aload()
         docs.extend(doc)
     logger.debug(f"Total documents loaded: {len(docs)}")
     to_be_chunked = [doc.page_content for doc in docs]
-    print(to_be_chunked[0])
-    chunked_docs = chunker(docs=to_be_chunked)  # Ensure chunker uses the correct encoder
+    logger.debug(to_be_chunked[0])
+    chunked_docs = chunker(docs=to_be_chunked)
     for chunk in chunked_docs:
-        chunk=  Document(
-                page_content=chunk,
-                metadata={"url": doc.metadata["source"], "title": doc.metadata.get("title", "")}
-            )
+        
     logger.debug(f"Total chunks after semantic chunking: {len(chunked_docs)}")
     vector_store.add_documents(chunked_docs)
