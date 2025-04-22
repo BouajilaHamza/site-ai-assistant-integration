@@ -1,219 +1,82 @@
-from typing import List, Dict
-from sklearn.metrics import precision_score, recall_score, f1_score
-from rouge_score import rouge_scorer
-import torch
-from transformers import BertTokenizer, BertModel
-from sentence_transformers import CrossEncoder
+import time
 import logging
-
-# Load BERT model and tokenizer
-MODEL_NAME = "bert-base-uncased"
-
-tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-model = BertModel.from_pretrained(MODEL_NAME, device_map="auto")
-
-# Initialize cross-encoder for reranking
-cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+import numpy as np
+from backend.services.vector_store import vector_store
+from backend.evaluation.llm.scoring import calculate_llm_metrics
+from backend.evaluation.llm.response_metrics import aggregate_bertscores
+from backend.evaluation.llm.bert_utils import bert_score
+from backend.evaluation.rag.retriever_metrics import calculate_retrieval_metrics
+from backend.evaluation.rag.reranking import evaluate_retrieval_with_cross_encoder
+from backend.evaluation.experiment_tracking import get_experiment
 
 logger = logging.getLogger(__name__)
-# logging.basicConfig(level=logging.info)
 
 
-def get_embeddings(text):
-    """
-    Generate token embeddings for the input text using BERT.
-
-    Args:
-        text (str): Input text or batch of sentences.
-
-    Returns:
-        torch.Tensor: Token embeddings with shape (batch_size, seq_len, hidden_dim).
-    """
-    # Tokenize input text
-    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-    # Move inputs to GPU if available
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    inputs = inputs.to(device)
-
-    # Compute embeddings without gradient calculation
-    with torch.no_grad():
-        outputs = model(**inputs, output_hidden_states=True)
-    # Return last hidden states (token-level embeddings)
-    return outputs.last_hidden_state
+def get_embedding(text: str):
+    return vector_store.embeddings.embed_query(text)
 
 
-def cosine_similarity(generated_embeddings, reference_embeddings):
-    """
-    Compute cosine similarity between two sets of embeddings.
-
-    Args:
-        generated_embeddings (torch.Tensor): Embeddings of candidate tokens with shape (batch_size, seq_len, hidden_dim).
-        reference_embeddings (torch.Tensor): Embeddings of reference tokens with shape (batch_size, seq_len, hidden_dim).
-
-    Returns:
-        torch.Tensor: Cosine similarity matrix with shape (seq_len_generated, seq_len_reference).
-    """
-    # Normalize embeddings along the hidden dimension
-    generated_embeddings = torch.nn.functional.normalize(generated_embeddings, dim=-1)
-    reference_embeddings = torch.nn.functional.normalize(reference_embeddings, dim=-1)
-
-    # Compute similarity using batched matrix multiplication
-    return torch.bmm(generated_embeddings, reference_embeddings.transpose(1, 2))
-
-
-
-def get_precision(similarity_matrix):
-    """
-    Calculate BERT precision as the mean of the maximum similarity scores from the candidate to the reference.
-
-    Args:
-        similarity_matrix (torch.Tensor): Cosine similarity matrix.
-
-    Returns:
-        torch.Tensor: Precision score.
-    """
-    return similarity_matrix.max(dim=2)[0].mean()
-
-
-
-def get_recall(similarity_matrix):
-    """
-    Calculate BERT recall as the mean of the maximum similarity scores from the reference to the candidate.
-
-    Args:
-        similarity_matrix (torch.Tensor): Cosine similarity matrix.
-
-    Returns:
-        torch.Tensor: Recall score.
-    """
-    return similarity_matrix.max(dim=1)[0].mean()
-
-
-def get_f1_score(precision, recall):
-    """
-    Compute the F1 score given precision and recall.
-
-    Args:
-        precision (torch.Tensor): Precision score.
-        recall (torch.Tensor): Recall score.
-
-    Returns:
-        torch.Tensor: F1 score.
-    """
-    return 2 * (precision * recall) / (precision + recall)
-
-
-
-
-def bert_score(candidate, reference):
-    """
-    Compute BERTScore (Precision, Recall, F1) between a candidate and a reference sentence.
-
-    Args:
-        candidate (str): Candidate sentence.
-        reference (str): Reference sentence.
-
-    Returns:
-        dict: Dictionary containing precision, recall, and F1 scores.
-    """
-    # Get token embeddings for candidate and reference
-    candidate_embeddings = get_embeddings(candidate)
-    reference_embeddings = get_embeddings(reference)
-
-    # Compute cosine similarity matrix
-    similarity_matrix = cosine_similarity(candidate_embeddings, reference_embeddings)
-
-    # Calculate precision, recall, and F1 scores
-    precision = get_precision(similarity_matrix)
-    recall = get_recall(similarity_matrix)
-    f1_score = get_f1_score(precision, recall)
-
-    # Return scores as a dictionary
+async def validate_rag_system(retrieved_docs, ground_truth_docs, generated_answer, reference_answer):
+    logger.debug("Validating RAG system...")
+    retrieval_metrics = calculate_retrieval_metrics(retrieved_docs, ground_truth_docs)
+    logger.debug("Retrieval metrics calculated.")
+    llm_metrics = calculate_llm_metrics(generated_answer, reference_answer)
+    logger.debug("LLM metrics calculated.")
+    logger.debug("RAG system validation completed.")
     return {
-        "precision": precision.item(),
-        "recall": recall.item(),
-        "f1_score": f1_score.item(),
+        "retrieval_metrics": retrieval_metrics,
+        "llm_metrics": llm_metrics
     }
 
 
-
-
-
-def calculate_retrieval_metrics(retrieved_docs: List[str], ground_truth_docs: List[str]) -> Dict[str, float]:
-    """
-    Calculate retrieval metrics: Precision, Recall, and F1-score.
-
-    Args:
-        retrieved_docs (List[str]): List of retrieved document URLs.
-        ground_truth_docs (List[str]): List of ground truth document URLs.
-
-    Returns:
-        Dict[str, float]: Dictionary containing precision, recall, and F1-score.
-    """
-
-    y_true = [1 if doc in ground_truth_docs else 0 for doc in retrieved_docs]
-    y_pred = [1] * len(retrieved_docs) 
-
-    precision = precision_score(y_true, y_pred, zero_division=0)
-    recall = recall_score(y_true, y_pred, zero_division=0)
-    f1 = f1_score(y_true, y_pred, zero_division=0)
-
-    return {"precision": precision, "recall": recall, "f1_score": f1}
-
-def calculate_llm_metrics(generated_answer: str, reference_answer: str) -> Dict[str, float]:
-    """
-    Calculate LLM response metrics: ROUGE and BERTScore.
-
-    Args:
-        generated_answer (str): The answer generated by the LLM.
-        reference_answer (str): The reference (ground truth) answer.
-
-    Returns:
-        Dict[str, float]: Dictionary containing ROUGE and BERTScore metrics.
-    """
-    # ROUGE
-    rouge = rouge_scorer.RougeScorer(['rouge1', 'rougeL'], use_stemmer=True)
-    logger.debug(f"Calculating ROUGE scores for generated answer: {generated_answer}")
-    rouge_scores = rouge.score(reference_answer, generated_answer)
-    logger.debug(f"ROUGE scores: {rouge_scores}")
-    # BERTScore
-    logger.debug("Calculating BERTScore for generated answer: ")
-    scores = bert_score(generated_answer, reference_answer)
+def evaluation_task(x):
+    experiment = get_experiment()
+    start_time = time.time()
+    query = x.get('query')
+    llm_response = x.get('llm_response')
+    if not query or not llm_response:
+        logger.error('Query and LLM response are required')
+        return {"error": "Query and LLM response are required"}
+    experiment.log_parameter("query", query)
+    experiment.log_parameter("llm_response", llm_response)
+    try:
+        query_embedding = get_embedding(query)
+        faiss_index = vector_store.vector_store.index if vector_store.vector_store else None
+        if faiss_index is None:
+            logger.error('FAISS index is not initialized')
+            return {"error": "FAISS index is not initialized"}
+        _, Index = faiss_index.search(np.asarray(query_embedding).reshape(1, -1), k=5)
+        knowledge_base = [doc.page_content for doc in vector_store.vector_store.docstore._dict.values()]
+        retrieved_texts = [knowledge_base[i] for i in Index[0] if i < len(knowledge_base)]
+    except Exception as e:
+        logger.error(f'Retrieval error: {e}')
+        return {"error": f"Retrieval error: {e}"}
+    bertscores = []
+    for text in retrieved_texts:
+        try:
+            bscore = bert_score(llm_response, text)
+            bertscores.append(bscore)
+        except Exception as e:
+            logger.warning(f'BERTScore error for text: {e}')
+    aggregated_bertscore = aggregate_bertscores(bertscores)
+    cross_encoder_metrics = evaluate_retrieval_with_cross_encoder(query, retrieved_texts)
+    experiment.log_metric("cross_encoder_mean_relevance", cross_encoder_metrics["mean_relevance"])
+    experiment.log_metric("cross_encoder_max_relevance", cross_encoder_metrics["max_relevance"])
+    experiment.log_metric("cross_encoder_min_relevance", cross_encoder_metrics["min_relevance"])
+    llm_metrics = calculate_llm_metrics(llm_response, query)
+    retrieval_metrics = calculate_retrieval_metrics(retrieved_texts, [llm_response])
+    experiment.log_metric("aggregated_bertscore", aggregated_bertscore)
+    experiment.log_metric("latency", time.time() - start_time)
+    for k, v in retrieval_metrics.items():
+        experiment.log_metric(f"retrieval_{k}", v)
+    latency = time.time() - start_time
     return {
-        "rouge1": rouge_scores['rouge1'].fmeasure,
-        "rougeL": rouge_scores['rougeL'].fmeasure,
-        "bert_score": scores
-    }
-
-def rerank_with_cross_encoder(query: str, retrieved_docs: List[str]) -> list:
-    """
-    Rerank retrieved documents using a cross-encoder model.
-    Args:
-        query (str): The input query.
-        retrieved_docs (List[str]): List of retrieved document texts.
-    Returns:
-        List[Tuple[str, float]]: List of (doc, score) tuples sorted by score descending.
-    """
-    pairs = [[query, doc] for doc in retrieved_docs]
-    scores = cross_encoder.predict(pairs)
-    reranked = sorted(zip(retrieved_docs, scores), key=lambda x: x[1], reverse=True)
-    return reranked
-
-def evaluate_retrieval_with_cross_encoder(query: str, retrieved_docs: List[str]) -> dict:
-    """
-    Evaluate retrieval by scoring each doc with a cross-encoder and reporting mean/max/min relevance.
-    Args:
-        query (str): The input query.
-        retrieved_docs (List[str]): List of retrieved document texts.
-    Returns:
-        dict: mean, max, min relevance scores.
-    """
-    pairs = [[query, doc] for doc in retrieved_docs]
-    scores = cross_encoder.predict(pairs)
-    scores = list(map(float, scores))  # Ensure scores is a list of floats
-    return {
-        "mean_relevance": float(sum(scores) / len(scores)) if len(scores) > 0 else 0.0,
-        "max_relevance": float(max(scores)) if len(scores) > 0 else 0.0,
-        "min_relevance": float(min(scores)) if len(scores) > 0 else 0.0,
-        "scores": scores,
+        "query": query,
+        "llm_response": llm_response,
+        "retrieved_texts": retrieved_texts,
+        "aggregated_bertscore": aggregated_bertscore,
+        "retrieval_metrics": retrieval_metrics,
+        "cross_encoder_metrics": cross_encoder_metrics,
+        "llm_metrics": llm_metrics,
+        "latency": latency,
     }
