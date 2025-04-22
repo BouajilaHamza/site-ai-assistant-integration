@@ -1,88 +1,113 @@
 # Site AI Assistant Integration
 
-This project provides an AI-powered assistant for integrating with websites. It includes features for knowledge base management, language detection, and validation metrics.
+A modern, production-ready AI assistant platform for integrating advanced language models with your website's knowledge base.  
+Easily build, manage, and query a multilingual knowledge base with robust evaluation and a sleek, responsive frontend.
+
+---
 
 ## Features
 
-- **Knowledge Base Management**: Automatically extract and manage knowledge from website sitemaps.
-- **Language Detection**: Detects the language of user queries (Arabic, English, French) and uses appropriate AI models.
-- **Validation Metrics**: Provides retrieval and LLM metrics for system validation.
+- **Knowledge Base Initialization**
+  - Extracts and chunks content from your website using a base URL or sitemap file upload.
+  - Semantic chunking and FAISS vector search for efficient, accurate retrieval.
+
+- **Multilingual Language Detection**
+  - Detects user query language (Arabic, English, French, etc.) using FastText.
+  - Automatically adapts prompts and responses for Arabic/Persian or English.
+
+- **LLM Integration**
+  - Uses Groq's Llama-3.3-70b-versatile model for chat responses.
+  - Context-aware answers based on retrieved knowledge base content.
+
+- **Validation & Evaluation Metrics**
+  - Computes retrieval metrics (Precision, Recall, F1), LLM metrics (ROUGE, BERTScore), and cross-encoder relevance.
+  - Metrics are displayed in the frontend and logged to Comet ML for experiment tracking.
+
+- **Modern Frontend**
+  - Responsive Bootstrap UI with sidebar for knowledge base setup, chat, and collapsible metrics section.
+  - Real-time chat and feedback.
+
+---
 
 ## Project Structure
 
-- `backend/`: Contains the core application logic, including API routes, services, and utilities.
-  - `api/`: Handles API routing and request handling.
-  - `core/`: Core configurations and settings.
-  - `services/`: Business logic for agents, vector stores, and more.
-  - `utils/`: Utility functions for parsing, validation, and language detection.
-- `models/`: Stores pre-trained models like `lid.176.ftz` for language detection.
-- `static/`: Static assets such as CSS, JavaScript, and images.
-- `templates/`: HTML templates for the web interface.
+- `backend/`: FastAPI app, API routes, vector store, evaluation, and utilities.
+- `models/`: Pre-trained FastText language detection model.
+- `static/`: CSS, JS, and images for the frontend.
+- `templates/`: Jinja2 HTML templates.
 
-## Setup Instructions
+---
 
-1. **Install `uv`**:
+## Quickstart
+
+1. **Install [uv](https://github.com/astral-sh/uv):**
    ```bash
    pip install uv
    ```
 
-2. **Create a Virtual Environment**:
+2. **Create a Virtual Environment:**
    ```bash
    uv venv
    ```
 
-3. **Sync Dependencies**:
-   - For production dependencies:
-     ```bash
-     uv sync
-     ```
-   - For development dependencies (including extras):
-     ```bash
-     uv sync --all-extras
-     ```
+3. **Sync Dependencies:**
+   ```bash
+   uv sync --all-extras
+   ```
 
-4. **Run the Application**:
+4. **Configure Environment Variables:**  
+   Copy `.env.sample` to `.env` and fill in your API keys and base URL.
+
+5. **Run the Application:**
    ```bash
    uvicorn backend.main:app --reload
    ```
 
-5. **Access the Application**:
-   Open your browser and navigate to `http://127.0.0.1:8000`.
+6. **Open in Browser:**  
+   Visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-## Validation & Experiment Tracking
+---
 
-- The chatbot UI includes a collapsible metrics section showing retrieval and LLM evaluation metrics (Precision, Recall, F1, ROUGE, BERTScore, etc.).
-- Metrics are computed in the backend and can be optionally displayed in the UI for technical users.
-- The backend is integrated with Comet ML for experiment tracking and evaluation logging.
-- Metrics are not fetched/submitted on every chat message by default, but the infrastructure is in place for robust evaluation.
+## Usage
 
-## Experiment Tracking
+### Knowledge Base Initialization
 
-- Integrated with [Comet ML](https://www.comet.com/) for experiment tracking and evaluation logging.
-- Configure your Comet ML credentials in the `.env` file:
-  - `COMET_ML_API_KEY`
-  - `COMET_ML_PROJECT_NAME`
-  - `COMET_ML_WORKSPACE`
+- Use the sidebar form to enter a base URL or upload a sitemap file.
+- The backend extracts, chunks, and indexes your website content for retrieval.
 
-## Evaluation & Validation Architecture
+### Chat & Language Detection
 
-- **Modular evaluation pipeline** under `backend/evaluation/`:
-  - `rag/`: Retriever metrics and reranking (e.g., Precision@K, Recall@K, Cross-Encoder)
-  - `llm/`: LLM response metrics (e.g., BERTScore, ROUGE, custom faithfulness)
-  - `experiment_tracking.py`: Centralized experiment logging (Comet ML)
-  - `utils.py`: Orchestration logic for evaluation and validation
-  - `synthetic_data.py`: (Planned) Synthetic QA/test set generation
-- **API endpoints** for both ground-truth validation and live evaluation.
-- **Frontend** displays metrics in a collapsible section for technical users.
+- Enter your question in any supported language.
+- The system detects the language and adapts the prompt for the LLM.
+- Arabic and Persian queries get native-language prompts; others default to English.
+
+### Validation & Experiment Tracking
+
+- **Metrics:** Precision, Recall, F1, ROUGE, BERTScore, Cross-Encoder Relevance, Latency.
+- **Comet ML Integration:**  
+  - Logs all evaluation metrics and parameters for experiment tracking.
+  - Configure your Comet ML credentials in `.env`.
+
+---
 
 ## Environment Variables
 
-- `TARGET_DOMAIN`: The target website domain for sitemap extraction.
-- `GROQ_API_KEY`: API key for Groq AI models.
-- `BASE_URL`: Target website domain for sitemap extraction.
-- `COMET_ML_API_KEY`, `COMET_ML_PROJECT_NAME`, `COMET_ML_WORKSPACE`: Comet ML experiment tracking.
-- (Optional) `HUGGINGFACE_API_KEY`, `TAVILY_API_KEY`, `FIRECRAWL_API_KEY` for additional integrations.
+- `GROQ_API_KEY`: Groq LLM API key.
+- `BASE_URL`: Default website for sitemap extraction.
+- `COMET_ML_API_KEY`, `COMET_ML_PROJECT_NAME`, `COMET_ML_WORKSPACE`: Comet ML tracking.
+- (Optional) `HUGGINGFACE_API_KEY`, `TAVILY_API_KEY`, `FIRECRAWL_API_KEY` for extra integrations.
+
+---
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+MIT License.  
+See [LICENSE](LICENSE) for details.
+
+---
+
+## Contact
+
+For questions, suggestions, or contributions, please open an issue or pull request.
+
+---
