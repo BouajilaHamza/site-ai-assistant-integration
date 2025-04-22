@@ -1,7 +1,7 @@
 [project]
-name = "mozn-sa-customer-support"
+name = "site-ai-assistant-integration"
 version = "0.1.0"
-description = "Add your description here"
+description = "This repository provides an AI-powered assistant for website integration, featuring knowledge base management, multilingual language detection, and validation metrics. It includes a modular backend, pre-trained models, and Comet ML integration for experiment tracking. Designed for robust evaluation and enhancing user interaction."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -30,6 +30,8 @@ dependencies = [
     "numpy==1.26.2",
     "accelerate>=1.6.0",
     "comet-ml>=3.49.8",
+    "semantic-chunkers>=0.0.10",
+    "nest-asyncio>=1.6.0",
 ]
 
 [project.optional-dependencies]

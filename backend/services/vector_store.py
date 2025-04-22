@@ -5,20 +5,18 @@ from langchain.docstore.document import Document
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from backend.utils.parsing_utils import extract_sitemap_links
 from backend.core.config import settings
-import logging
 from semantic_chunkers import StatisticalChunker
 from sentence_transformers import SentenceTransformer
+import logging
 
 logger = logging.getLogger(__name__)
 
-encoder = {
-    "name": "all-MiniLM-L6-v2",
-    "model": SentenceTransformer("all-MiniLM-L6-v2"),
-    "tokenizer": SentenceTransformer("all-MiniLM-L6-v2").tokenizer
-}
+
+
+encoder_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 chunker = StatisticalChunker(
-    encoder=encoder,
+    encoder=encoder_model,  # Pass the model directly instead of a dictionary
     min_split_tokens=100,
     max_split_tokens=500,
     plot_chunks=False,
@@ -62,7 +60,9 @@ async def initialize_knowledge_base():
         doc = loader.aload()
         docs.extend(doc)
     logger.debug(f"Total documents loaded: {len(docs)}")
-    chunked_docs = chunker([doc.page_content for doc in range(len(docs))])
+    to_be_chunked = [doc.page_content for doc in docs]
+    print(to_be_chunked[0])
+    chunked_docs = chunker(docs=to_be_chunked)  # Ensure chunker uses the correct encoder
     for chunk in chunked_docs:
         chunk=  Document(
                 page_content=chunk,

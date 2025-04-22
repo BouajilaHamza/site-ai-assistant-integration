@@ -6,13 +6,12 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv
 import nest_asyncio
 import aiofiles
 import httpx
 
 
-load_dotenv()
+
 
 async def download_model():
     MODEL_PATH.parent.mkdir(exist_ok=True)
