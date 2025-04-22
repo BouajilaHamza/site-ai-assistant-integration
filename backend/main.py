@@ -27,14 +27,12 @@ async def lifespan(app: FastAPI):
     nest_asyncio.apply()
     if not MODEL_PATH.exists():
         await download_model()
-    await initialize_knowledge_base()
     yield
 
 app = FastAPI(
     title="Knowledge Base API",
     description="API for managing and querying a knowledge base.",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 # Mount static directory
