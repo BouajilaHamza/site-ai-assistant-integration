@@ -5,7 +5,7 @@
 
   // Create chat button
   var chatBtn = document.createElement('div');
-  chatBtn.innerText = '💬 Chat';
+  chatBtn.innerText = 'Your Site Companion';
   chatBtn.style.position = 'fixed';
   chatBtn.style.bottom = '24px';
   chatBtn.style.right = '24px';
@@ -37,7 +37,7 @@
 
   // Chat header
   var header = document.createElement('div');
-  header.innerText = 'Mozn AI Assistant';
+  header.innerText = 'Site AI Assistant';
   header.style.background = '#007bff';
   header.style.color = '#fff';
   header.style.padding = '12px';
@@ -83,13 +83,28 @@
     chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
   };
 
-  // Send message
+  // Helper: Render markdown and newlines to HTML
+  function renderMarkdown(text) {
+    // Basic replacements for markdown and newlines
+    let html = text
+      .replace(/</g, "&lt;").replace(/>/g, "&gt;") // Escape HTML
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')     // Bold
+      .replace(/\*(.*?)\*/g, '<i>$1</i>')         // Italic
+      .replace(/`([^`]+)`/g, '<code>$1</code>')   // Inline code
+      .replace(/\n/g, '<br>');                    // Newlines
+    return html;
+  }
+
   function appendMessage(text, from) {
     var msg = document.createElement('div');
-    msg.innerText = text;
     msg.style.margin = '8px 0';
     msg.style.textAlign = from === 'user' ? 'right' : 'left';
     msg.style.color = from === 'user' ? '#007bff' : '#222';
+    if (from === 'bot') {
+      msg.innerHTML = renderMarkdown(text);
+    } else {
+      msg.innerText = text;
+    }
     messages.appendChild(msg);
     messages.scrollTop = messages.scrollHeight;
   }
@@ -100,14 +115,14 @@
     appendMessage(text, 'user');
     input.value = '';
     // Call backend API
-    fetch('https://YOUR_BACKEND_URL/api/chat', {
+    fetch('http://127.0.0.1:8000/agents/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })
     })
       .then(r => r.json())
       .then(data => {
-        appendMessage(data.response || 'No response', 'bot');
+        appendMessage(data.response.content || 'No response', 'bot');
       })
       .catch(() => {
         appendMessage('Error contacting server.', 'bot');
