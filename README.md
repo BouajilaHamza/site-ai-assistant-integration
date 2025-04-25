@@ -111,3 +111,24 @@ See [LICENSE](LICENSE) for details.
 For questions, suggestions, or contributions, please open an issue or pull request.
 
 ---
+
+## Embedding the AI Assistant Widget
+
+You can easily add the Site AI Assistant to any website with a single line of code. The widget will appear as a chat bubble in the bottom-right corner and connect to your private backend.
+
+**Integration Snippet:**
+
+```html
+<!-- Site AI Assistant Widget -->
+<script src="https://YOUR_BACKEND_URL/static/js/widget.js"></script>
+```
+
+Replace `YOUR_BACKEND_URL` with your actual backend URL or IP address.
+
+- The widget will automatically inject a chat UI into your site.
+- All chat data is sent securely to your self-hosted backend.
+- For advanced configuration, see the widget source at `static/js/widget.js`.
+
+**Note:**
+- Ensure your backend allows CORS requests from your website domain.
+- The backend must serve the widget at `/static/js/widget.js` and expose a chat API at `/api/chat`.
