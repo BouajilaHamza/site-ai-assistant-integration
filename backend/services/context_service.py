@@ -5,13 +5,13 @@ from semantic_router.encoders import HuggingFaceEncoder
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from langchain.docstore.document import Document
 import logging
+import nest_asyncio
 
+
+
+nest_asyncio.apply()
 logger = logging.getLogger(__name__)
-
-# Instantiate vector repository ONCE using factory
 vector_repository = get_repository()
-
-# Instantiate chunker ONCE
 encoder = HuggingFaceEncoder(
     model_name="sentence-transformers/all-MiniLM-L6-v2",
     max_length=512,
@@ -53,7 +53,7 @@ async def initialize_knowledge_base(base_url_or_path: str) -> list[Document]:
     for url in sitemap_urls[:2]:  # limit for now
         logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url, continue_on_failure=True)
-        loaded_docs = await loader.aload()
+        loaded_docs = loader.aload()
         docs.extend(loaded_docs)
 
     if not docs:
