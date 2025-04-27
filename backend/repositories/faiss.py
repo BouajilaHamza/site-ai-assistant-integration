@@ -1,5 +1,3 @@
-# backend/repositories/faiss.py
-
 from typing import List
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
