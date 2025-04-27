@@ -37,7 +37,7 @@ def build_chunk(title: str, content: str) -> str:
     """
     return f"# {title}\n{content}"
 
-async def initialize_knowledge_base(base_url_or_path: str) -> list[Document]:
+async def initialize_knowledge_base(base_url_or_path: str,urls_limit=2) -> list[Document]:
     """
     Initializes the knowledge base by loading sitemaps, chunking documents, and adding to vector store.
 
@@ -50,7 +50,7 @@ async def initialize_knowledge_base(base_url_or_path: str) -> list[Document]:
     sitemap_urls = extract_sitemap_links(base_url_or_path)
     docs = []
     
-    for url in sitemap_urls:  # limit for now
+    for url in sitemap_urls[:urls_limit]:  # limit for now
         logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url, continue_on_failure=True)
         loaded_docs = loader.aload()
