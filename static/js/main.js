@@ -168,13 +168,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const baseUrlOrPath = document.getElementById("base-url-or-path").value;
         const sitemapFile = document.getElementById("sitemap-file").files[0];
+        const nb_urls_limit = document.getElementById("nb-urls-limit").value;
         const formData = new FormData();
 
         if (baseUrlOrPath) {
-            formData.append("base_url_or_path", baseUrlOrPath);
+            formData.append("base_url", baseUrlOrPath);
         }
         if (sitemapFile) {
             formData.append("sitemap_file", sitemapFile);
+        }
+        if (nb_urls_limit) {
+            formData.append("nb_urls_limit", nb_urls_limit);
         }
 
         const responseContainer = document.getElementById("context-response");

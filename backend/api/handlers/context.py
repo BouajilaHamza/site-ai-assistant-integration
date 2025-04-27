@@ -29,8 +29,8 @@ async def get_context(
 
         logger.debug(f"Initializing knowledge base with: {base_url}")
         docs = await initialize_knowledge_base(base_url, urls_limit)
-        if not docs:
-            raise HTTPException(status_code=400, detail="No documents loaded from sitemap!")
+        # if not docs:
+        #     raise HTTPException(status_code=400, detail="No documents loaded from sitemap!")
         return {"message": "Context initialized successfully", "total_documents": len(docs)}
 
     except Exception as e:
