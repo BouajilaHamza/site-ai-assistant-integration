@@ -1,6 +1,6 @@
 from backend.core.config import settings
 from backend.utils.lang_detect_utils import MODEL_PATH
-from backend.services.vectore_store import vector_store
+from backend.services.context_service import vector_repository
 from langchain_groq import ChatGroq
 import fasttext
 import logging 
@@ -40,7 +40,7 @@ def detect_language(text: str) -> str:
 
 
 async def query_knowledge_base(question: str) -> str:
-    relevant_docs = vector_store.similarity_search(question)
+    relevant_docs = vector_repository.similarity_search(question)
     context = "\n".join([doc.page_content for doc in relevant_docs])
 
     language = detect_language(question)
