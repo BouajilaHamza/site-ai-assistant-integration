@@ -34,6 +34,7 @@ dependencies = [
     "semantic-chunkers>=0.0.10",
     "semantic-router>=0.0.68",
     "python-multipart>=0.0.20",
+    "qdrant-client>=1.12.1",
 ]
 
 [project.optional-dependencies]
