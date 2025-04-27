@@ -177,14 +177,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sitemapFile) {
             formData.append("sitemap_file", sitemapFile);
         }
-        if (nb_urls_limit) {
-            formData.append("nb_urls_limit", nb_urls_limit);
-        }
+        console.log("Sitemap file:", sitemapFile);
+        console.log("Base URL or Path:", baseUrlOrPath);
+        console.log("Number of URLs limit:", nb_urls_limit);
+        formData.append("urls_limit", nb_urls_limit);
 
         const responseContainer = document.getElementById("context-response");
         responseContainer.innerHTML = "Initializing knowledge base...";
 
         try {
+            console.log("FormData:", formData);
             const response = await fetch("/context/get-context", {
                 method: "POST",
                 body: formData,

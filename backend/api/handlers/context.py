@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 @context_router.post("/get-context")
 async def get_context(
-                    base_url : Optional[HttpUrl] = Form(None), 
+                    urls_limit       : int = Form(...),
+                    base_url         : Optional[HttpUrl] = Form(None), 
                     sitemap_file     : Optional[UploadFile] = None,
-                    urls_limit       : int = 2
                     ):
     """
     Initialize the knowledge base from URL or uploaded sitemap.
