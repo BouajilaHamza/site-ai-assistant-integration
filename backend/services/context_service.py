@@ -1,9 +1,8 @@
-# backend/services/context_service.py
-
 from backend.repositories.factory import get_repository
 from backend.utils.parsing_utils import extract_sitemap_links
 from semantic_chunkers import StatisticalChunker
 from semantic_router.encoders import HuggingFaceEncoder
+from langchain_community.document_loaders.sitemap import SitemapLoader
 from langchain.docstore.document import Document
 import logging
 
@@ -53,7 +52,6 @@ async def initialize_knowledge_base(base_url_or_path: str) -> list[Document]:
     
     for url in sitemap_urls[:2]:  # limit for now
         logger.debug(f"Processing sitemap: {url}")
-        from langchain_community.document_loaders.sitemap import SitemapLoader
         loader = SitemapLoader(web_path=url, continue_on_failure=True)
         loaded_docs = await loader.aload()
         docs.extend(loaded_docs)
