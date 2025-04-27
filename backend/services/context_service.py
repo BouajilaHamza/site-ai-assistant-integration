@@ -50,7 +50,7 @@ async def initialize_knowledge_base(base_url_or_path: str) -> list[Document]:
     sitemap_urls = extract_sitemap_links(base_url_or_path)
     docs = []
     
-    for url in sitemap_urls[:2]:  # limit for now
+    for url in sitemap_urls:  # limit for now
         logger.debug(f"Processing sitemap: {url}")
         loader = SitemapLoader(web_path=url, continue_on_failure=True)
         loaded_docs = loader.aload()
