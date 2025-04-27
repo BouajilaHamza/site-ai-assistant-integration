@@ -4,7 +4,6 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from backend.utils.parsing_utils import extract_sitemap_links
-from backend.core.config import settings
 from semantic_chunkers import StatisticalChunker
 from semantic_router.encoders import HuggingFaceEncoder
 import logging

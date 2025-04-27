@@ -3,7 +3,7 @@ from abc import ABC , abstractmethod
 
 class KnowledgeRepository(ABC):
     @abstractmethod
-    def index_documents(self, documents):
+    def add_documents(self, documents):
         """
         Index a list of documents.
         """
@@ -19,8 +19,17 @@ class KnowledgeRepository(ABC):
     
     
     @abstractmethod
-    def delete_index(self):
+    def delete(self):
         """
         Delete the index.
+        """
+        pass
+    
+    
+    
+    @abstractmethod
+    def load(self):
+        """
+        Load the index.
         """
         pass
