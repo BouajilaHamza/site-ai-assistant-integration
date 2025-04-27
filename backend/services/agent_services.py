@@ -1,6 +1,6 @@
 from backend.core.config import settings
 from backend.utils.lang_detect_utils import MODEL_PATH
-from backend.services.vector_store import vector_store
+from backend.services.vectore_store import vector_store
 from langchain_groq import ChatGroq
 import fasttext
 import logging 

@@ -1,7 +1,7 @@
 import time
 import logging
 import numpy as np
-from backend.services.vector_store import vector_store
+from backend.services.vectore_store import vector_store
 from backend.evaluation.llm.scoring import calculate_llm_metrics
 from backend.evaluation.llm.response_metrics import aggregate_bertscores
 from backend.evaluation.llm.bert_utils import bert_score
